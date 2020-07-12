@@ -80,11 +80,13 @@ You can filter that PDB that obtains from the PDB bank based on these fields:
 | resolution  | PDB resolution    |
 
 - You need to pass the keyword FilterBy with the command 
+
 ```
 java -jar Mining.jar MiningAuthors FilterBy="[experimentalTechnique:X-RAY DIFFRACTION,SOLUTION NMR][publicationYear:2015-2020] Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" 
 ```
 - The above command will be mining in the PDB that solved by only X-RAY DIFFRACTION or SOLUTION NMR and published between 2015-2020.
 - You can select to search for the papers that published in a specific year by using a comma instead of hyphen For example:
+
 ```
 java -jar Mining.jar MiningAuthors FilterBy="[experimentalTechnique:X-RAY DIFFRACTION,SOLUTION NMR][publicationYear:2016,2018] Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" 
 ```
