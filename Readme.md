@@ -24,14 +24,15 @@ java -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccan
 | PublishedInOnePaper  | Set to T when this paper contains multiple PDB     |
 
 ### UseExistsPapers keyword 
-The tool will download the research papers as well as the authors information and then extract the authors information. Use UseExistsPapers when the tool already downloaded the research papers and you want to only create the CSV file. 
+The tool will download the research papers as well as the authors' affiliation and then extract the required information from the authors' affiliation. Use UseExistsPapers when the tool already downloaded the research papers, and you want only to create the CSV file. 
+
 ```
 UseExistsPapers=T
 ```
       
 
 ## Mining pipelines
-You can be mining only about the pipelines used in the research papers without mining in the authors' information. The difference here from the "Mining authors information"  is that here we use more resources to obtain the research papers. 
+You can be mining only about the pipelines used in the research papers without mining in the authors' affiliation. The difference here from the "Mining authors information"  is that here we use more resources to obtain the research papers. 
 - The resources that use to obtain the research papers:
 - https://europepmc.org/
 - https://www.elsevier.com/
@@ -129,4 +130,4 @@ All the fields mentioned in the above table can be used in the same way as in th
 
 ## Multithreaded
 - The tool supports Multithreaded by setting Multithreaded=T 
-- Large number of threads might cause the resources to block the http connections and result in freezing the tool.  
+- A large number of threads might cause the resources to block the http connections and result in freezing the tool. 
