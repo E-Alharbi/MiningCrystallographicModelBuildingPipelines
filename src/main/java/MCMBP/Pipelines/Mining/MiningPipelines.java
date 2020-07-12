@@ -26,6 +26,7 @@ import MCMBP.Authors.Mining.PMCMultiThreaded;
 import MCMBP.Utilities.CSVReader;
 import MCMBP.Utilities.Downloder;
 import MCMBP.Utilities.TxtFiles;
+import me.tongfei.progressbar.ProgressBar;
 
 
 public class MiningPipelines implements Runnable{
@@ -38,6 +39,7 @@ public class MiningPipelines implements Runnable{
 	static String CSV="PDB,Pipeline,PaperLink\n";
 	static String PaperFoundButNotUsePipeline="PDB,DOI\n";
 	static HashMap<String,String> Tools= new HashMap<String,String>();
+	static ProgressBar pb;
 	static synchronized void AddToPaperNotFound(String Val) {
 		PaperNotFound+=Val;
 	}
@@ -49,12 +51,12 @@ public class MiningPipelines implements Runnable{
 	}
 	static synchronized String PickPDB() {
 		if(!PDBIDs.isEmpty()) {
-			System.out.println("Remaining PDB "+PDBIDs.size());
+			//System.out.println("Remaining PDB "+PDBIDs.size());
 			return PDBIDs.pop();
 		}
 		return null;
 	}
-	public  void Mining(String Pipeline, String PDBList, String CrossrefEmail1, String ElsevierToken1, String FilterBy) throws IOException {
+	public  void Mining(String Pipeline, String PDBList, String CrossrefEmail1, String ElsevierToken1, String FilterBy, boolean Multithreaded) throws IOException {
 		// TODO Auto-generated method stub
 		CrossrefEmail=CrossrefEmail1;
 		ElsevierToken=ElsevierToken1;
@@ -63,6 +65,8 @@ public class MiningPipelines implements Runnable{
 		Vector<String> PDB= new Vector<String>();
 		if(PDBList.trim().length()!=0) {
 			 PDB= new TxtFiles().ReadIntoVec(PDBList,true);
+				System.out.println("FilterBy will not be used as UseExistsPapers set to true");
+
 		}
 		else {
 			PMCMultiThreaded pmc= 	new PMCMultiThreaded();
@@ -71,7 +75,7 @@ public class MiningPipelines implements Runnable{
 				PDB.add(pdb);
 			}
 		}
-		//System.out.println(PDB);
+		
 		
 		Vector <String>OfficialPipelineNames= new Vector<String>(Arrays.asList(Pipeline.split(","))); 
 		for(String Pipe : OfficialPipelineNames) {
@@ -84,7 +88,10 @@ public class MiningPipelines implements Runnable{
 		
 		
 		PDBIDs.addAll(PDB);
-		//System.out.println(PDBIDs);
+		
+		 pb = new ProgressBar("Downloading papers", PDBIDs.size());
+		
+		if(Multithreaded==true) {
 		ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()-1);
 		while (!PDBIDs.isEmpty()) {
 				es.execute(new MiningPipelines());// new thread
@@ -93,10 +100,17 @@ public class MiningPipelines implements Runnable{
 		es.shutdown();
 		
 		while(es.isTerminated()==false) ;
+		}
 		
-		new TxtFiles().WriteStringToTxtFile("MRPapers.csv", CSV);
-		new TxtFiles().WriteStringToTxtFile("MRPapersNOTFound.csv", PaperNotFound);
-		new TxtFiles().WriteStringToTxtFile("MRPapersFoundButNotUsePipeline.csv", PaperFoundButNotUsePipeline);
+		if(Multithreaded==false) {
+		while (!PDBIDs.isEmpty()) {
+			new MiningPipelines().run();
+	}
+		}
+		pb.close();
+		new TxtFiles().WriteStringToTxtFile("FoundPapers.csv", CSV);
+		new TxtFiles().WriteStringToTxtFile("PapersNOTFound.csv", PaperNotFound);
+		new TxtFiles().WriteStringToTxtFile("PapersFoundButNotUsePipeline.csv", PaperFoundButNotUsePipeline);
 	}
 
 	@Override
@@ -104,18 +118,18 @@ public class MiningPipelines implements Runnable{
 		// TODO Auto-generated method stub
 		
 		
-			
+		pb.step();
 String PDBIDAsFRomTheExcel=	PickPDB();
 if(PDBIDAsFRomTheExcel==null)
 	return;
 PDBIDAsFRomTheExcel=PDBIDAsFRomTheExcel.substring(0, 4);
 String PDBBankRes=null;
-System.out.println(PDBIDAsFRomTheExcel);
+
 try {
 	PDBBankRes = new Downloder().GetHttpRequste("https://www.rcsb.org/pdb/rest/customReport.csv?pdbids="+PDBIDAsFRomTheExcel+"&customReportColumns=pubmedId,doi&primaryOnly=1&service=wsfile&format=csv");
 } catch (IOException e1) {
 	// TODO Auto-generated catch block
-	e1.printStackTrace();
+	//e1.printStackTrace();
 }
 //System.out.println(new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId"));
 
@@ -158,7 +172,7 @@ try {
 		        FileUtils.deleteQuietly(myFile);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 			
 		} 
 	
@@ -211,31 +225,19 @@ try {
 		}
 	}
 	}
-	//System.out.println(pubmedId);
-	//System.out.println(PMC);
-	//Vector<String> Tools= new Vector<String>();
-	//Tools.add("arp/warp");
-	//Tools.add("buccaneer");
-	//Tools.add("shelxe");
-	///Tools.add("phenix.autobuild");
-	//Tools.add("phenix autobuild");
+
 	
 	if(PMC.length()==0) {
 		AddToPaperNotFound(PDBIDAsFRomTheExcel+","+new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId").get(PDBIDAsFRomTheExcel).get("doi")+"\n");
 		
 	}
 	
-	//HashMap<String,String> Tools= new HashMap<String,String>();
-	//Tools.put("arp/warp", "ARPwARP");
-	//Tools.put("buccaneer", "Buccaneeri1I5ModelSeed");
-	//Tools.put("shelxe", "ShelxeWithTFlag");
-	//Tools.put("phenix.autobuild", "Phenix");
-	//Tools.put("phenix autobuild", "Phenix");
+	
 	boolean UsePipeline=false;
 	if(PMC.trim().length()!=0)
 	for(String tool : Tools.keySet() ) {
 		if(PMC.toLowerCase().contains(tool)) {
-			System.out.println("Found "+tool +" PDB "+PDBIDAsFRomTheExcel);
+			
 			AddToCSV(PDBIDAsFRomTheExcel+","+Tools.get(tool)+","+new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId").get(PDBIDAsFRomTheExcel).get("doi")+"\n");
 			
 			UsePipeline=true;
@@ -247,7 +249,7 @@ try {
 	}
 } catch (DOMException | IOException | ParserConfigurationException | SAXException e) {
 	// TODO Auto-generated catch block
-	e.printStackTrace();
+	//e.printStackTrace();
 }
 
 		
