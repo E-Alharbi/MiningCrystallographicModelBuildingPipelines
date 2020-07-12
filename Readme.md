@@ -21,6 +21,7 @@ java -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccan
 | MostCountry  | The country that most repeated in the authors' affiliation   |
 | ListOfCountries  | All the countries that mentioned in the authors' affiliation   |
 | FirstAuthor  | The country of the first author     |
+| PublishedInOnePaper  | Set to T when this paper contains multiple PDB     |
 
 ## Mining pipelines
 You can be mining only about the pipelines used in the research papers without mining in the authors' information. The difference here from the "Mining authors information"  is that here we use more resources to obtain the research papers. 
