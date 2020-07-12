@@ -10,7 +10,7 @@ java -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccan
 - The above command will fetch all PDB ids as well as Pubmed ID from the PDB bank and then obtains the research paper from https://europepmc.org/ by using the research paper PUB MED ID.
 - The papers which do not have PUB MED ID or not found in https://europepmc.org/ will be ignored.  
 - Pipeline: The name before the colon (:) is the pipeline official name that usually uses in the research paper when they refer to the pipeline and the name after the colon (:) is to use in the CSV file. This help when the pipeline mentions in different names in different research papers.
-### The output of the above command is a CSV file that contains the following
+### The output of the above command is two CSV file that contain the following with a difference is that the other csv file has non duplicated pipeline name for same research paper when it has multiple PDB.  
 | Field  | Description |
 | ------------- | ------------- |
 | ID  | Pubmed ID  |

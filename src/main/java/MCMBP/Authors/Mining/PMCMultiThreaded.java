@@ -211,7 +211,8 @@ public class PMCMultiThreaded implements Runnable {
 		File [] xml= new File("xml").listFiles();
 		NLP.LoadNLP();
 		pb = new ProgressBar("Extracting information ", xml.length);
-		
+		String CSVWithNoneRepeatedPubid="ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper\n";
+		String RecordNoneRepeatedPubid="";
 		for(File j: json) {
 			File Paper=null;
 			for(File x: xml) {
@@ -268,8 +269,14 @@ public class PMCMultiThreaded implements Runnable {
 								if(pmc.size()>1)
 									PublishedInOnePaper="T";
 								
+								String PDBs="";
+								String Reso="";
+								
 								for(String PDBID : pmc.keySet()) {
 								Record=pmc.get(PDBID).get("pubmedId")+","+pmc.get(PDBID).get("resolution")+","+pmc.get(PDBID).get("publicationYear")+",";
+								PDBs+=PDBID+" ";
+								Reso+=pmc.get(PDBID).get("resolution")+" ";
+								RecordNoneRepeatedPubid=pmc.get(PDBID).get("pubmedId")+","+Reso+","+pmc.get(PDBID).get("publicationYear")+",";
 								
 								
 								if(maxEntry != null) {
@@ -279,15 +286,17 @@ public class PMCMultiThreaded implements Runnable {
 										ListOfCOUNTRIES+=c+" ";
 										
 									 Record+=Tools.get(tool)+","+PDBID+","+maxEntry.getKey()+","+ListOfCOUNTRIES+","+COUNTRIES.get(0)+","+PublishedInOnePaper+"\n";
+									 RecordNoneRepeatedPubid+=Tools.get(tool)+","+PDBs+","+maxEntry.getKey()+","+ListOfCOUNTRIES+","+COUNTRIES.get(0)+","+PublishedInOnePaper+"\n";
 								}
 									
-								else
-									Record+=Tools.get(tool)+","+PDBID+","+"-1,"+PublishedInOnePaper+"\n";
-								
-							
+								else {
+									Record+=Tools.get(tool)+","+PDBID+","+"-1,-1,-1,"+PublishedInOnePaper+"\n";
+								 RecordNoneRepeatedPubid+=Tools.get(tool)+","+PDBID+","+"-1,-1,-1,"+PublishedInOnePaper+"\n";
+								}
 								
 								AddCSVRecord(Record);
 								}
+								 CSVWithNoneRepeatedPubid+=RecordNoneRepeatedPubid;
 								
 				}
 			}
@@ -300,7 +309,8 @@ public class PMCMultiThreaded implements Runnable {
 		String CSV="ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper\n";
 		for(String record : CSVRecords)
 			CSV+=record;
-		new TxtFiles().WriteStringToTxtFile("Papers.csv", CSV);
+		new TxtFiles().WriteStringToTxtFile("AuthorsInformation.csv", CSV);
+		new TxtFiles().WriteStringToTxtFile("NonDuplicatedPipelineAuthorsInformation.csv", CSVWithNoneRepeatedPubid);
 		
 	}
 
