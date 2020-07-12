@@ -15,6 +15,12 @@ public class Mining {
 		// TODO Auto-generated method stub
 
 		Vector<String> Parm = new Vector<String>();
+		boolean Multithreaded=false;
+		if(checkArg(Parm,"Multithreaded").trim().length()!=0)
+		{
+			if(checkArg(Parm,"Multithreaded").equals("T"))
+				Multithreaded=true;
+		}
 		for (int i = 0; i < args.length; ++i) {
 
 			if (args[i].contains("=")) {
@@ -29,7 +35,24 @@ public class Mining {
 				System.out.println("Please type in the pipelines/tools that you want to mining about. For example. Pipeline=\"arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild\". The name before(:) is the pipeline official name that usauly uses in the reserach paper when they refer to the pipeline and the name after (:) is to use in the CSV file. This help when the pipeline mentions in differnts names in differnts reserach papers.");
 				System.exit(-1);
 			}
-			new PMCMultiThreaded().Mining(checkArg(Parm,"FilterBy"),checkArg(Parm,"Pipeline"));
+			boolean UseExistsPapers=false;
+			if(checkArg(Parm,"UseExistsPapers").trim().length()!=0)
+			{
+				if(checkArg(Parm,"UseExistsPapers").equals("T")) {
+					UseExistsPapers=true;
+					if(checkArg(Parm,"FilterBy").trim().length()!=0)
+					{
+						
+							System.out.println("FilterBy will not be used as UseExistsPapers set to true");
+					}
+				}
+					
+			}
+			
+			
+			
+			
+			new PMCMultiThreaded().Mining(checkArg(Parm,"FilterBy"),checkArg(Parm,"Pipeline"),UseExistsPapers,Multithreaded);
 		}
 		
 	if(args[0].equals("MiningPipeline")) {
@@ -49,7 +72,7 @@ public class Mining {
 				System.out.println("Please type in your Elsevier Token. If you did not have Elsevier Token, you can get it from here  https://dev.elsevier.com and selects get api key. Then, you can enter your token using this keyword ElsevierToken=aaaaaa");
 				System.exit(-1);
 			}
-			new MiningPipelines().Mining(checkArg(Parm,"Pipeline"),checkArg(Parm,"PDBList"),checkArg(Parm,"CrossrefEmail"),checkArg(Parm,"ElsevierToken"),checkArg(Parm,"FilterBy"));
+			new MiningPipelines().Mining(checkArg(Parm,"Pipeline"),checkArg(Parm,"PDBList"),checkArg(Parm,"CrossrefEmail"),checkArg(Parm,"ElsevierToken"),checkArg(Parm,"FilterBy"),Multithreaded);
 		}
 	}
 	static String checkArg(Vector<String> Args, String Keyword) {
