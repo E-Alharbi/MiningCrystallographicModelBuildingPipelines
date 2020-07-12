@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.StringUtils;
 
 public class CSVFilter {
 	
@@ -36,6 +37,8 @@ public class CSVFilter {
 		
 	}
 	public Vector<String> SplitKeywordVal(String v){
+		
+		
 		 Vector<String>  Values = new Vector<String>();
 		  if(v.contains(",")) {
 				String [] SplitedValues=v.split(",");
@@ -44,7 +47,7 @@ public class CSVFilter {
 					Values.add(SplitedValues[i]);
 				}
 			}
-		 else if(v.contains("-")) {
+		 else if(v.contains("-") && StringUtils.isNumeric(v.replaceAll("-", ""))==true) {
 			String Start=v.split("-")[0];
 			String End=v.split("-")[1];
 			
