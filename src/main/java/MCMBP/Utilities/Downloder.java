@@ -17,6 +17,8 @@ public class Downloder {
 
 
 	public String Download(String Link, String FileType) throws IOException {
+	
+		
 	String wget="";
 	if(new File("/usr/bin/wget").exists())
 		wget="/usr/bin/wget";
@@ -38,10 +40,13 @@ String st="";
 			while ((st = stdInput.readLine()) != null) {
 				System.out.println(st);
 			}
+			stdInput.close();
+			
 			return Thread.currentThread().getId()+"."+FileType;
 }
 	
 	public String GetHttpRequste(String urllink) throws IOException {
+			
 	URL url=null;
 	try {
 		url = new URL(urllink);
@@ -49,10 +54,12 @@ String st="";
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	}
-	//System.out.println(url);
+	
 	HttpURLConnection conn=null;
+	
 	try {
 		conn = (HttpURLConnection) url.openConnection();
+		conn.setConnectTimeout(10000);
 	} catch (IOException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
@@ -62,6 +69,7 @@ String st="";
 	} catch (ProtocolException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
+		conn.disconnect();
 	}
 	conn.setRequestProperty("Accept", "application/xml");
 
@@ -72,12 +80,12 @@ String st="";
 	try {
 		br = new BufferedReader(new InputStreamReader(
 			(conn.getInputStream())));
-		System.out.println("Downloaded "+url+" Thread "+Thread.currentThread().getId());
+		
 	} catch (IOException e) {
 		// TODO Auto-generated catch block
 		//e.printStackTrace();
-		System.out.println("No data from "+url+" Thread "+Thread.currentThread().getId());
 		
+		conn.disconnect();
 	}
 
 	if(br==null)
@@ -96,8 +104,10 @@ String st="";
 	} catch (IOException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
+		conn.disconnect();
 	}
 	conn.disconnect();
+	  	
 	return Txt;
 }
 }
