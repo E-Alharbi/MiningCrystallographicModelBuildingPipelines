@@ -1,5 +1,7 @@
 # MiningCrystallographicModelBuildingPipelines
 A tool to mining in research papers that used crystallographic model building pipelines.
+ 
+<a href="https://github.com/E-Alharbi/MiningCrystallographicModelBuildingPipelines/releases/latest/download/Mining.jar"> Download latest release    </a> 
 ## Mining authors information
 
 
