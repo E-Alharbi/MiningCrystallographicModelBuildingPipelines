@@ -212,7 +212,8 @@ public class PMCMultiThreaded implements Runnable {
 		NLP.LoadNLP();
 		pb = new ProgressBar("Extracting information ", xml.length);
 		String CSVWithNoneRepeatedPubid="ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper\n";
-		String RecordNoneRepeatedPubid="";
+		String RecordNonRepeatedAuotherInfo="";
+		HashMap<String,String> RecordNonRepeatedPubid  = new HashMap<String,String>();
 		for(File j: json) {
 			File Paper=null;
 			for(File x: xml) {
@@ -276,7 +277,7 @@ public class PMCMultiThreaded implements Runnable {
 								Record=pmc.get(PDBID).get("pubmedId")+","+pmc.get(PDBID).get("resolution")+","+pmc.get(PDBID).get("publicationYear")+",";
 								PDBs+=PDBID+" ";
 								Reso+=pmc.get(PDBID).get("resolution")+" ";
-								RecordNoneRepeatedPubid=pmc.get(PDBID).get("pubmedId")+","+Reso+","+pmc.get(PDBID).get("publicationYear")+",";
+								RecordNonRepeatedAuotherInfo=pmc.get(PDBID).get("pubmedId")+","+Reso+","+pmc.get(PDBID).get("publicationYear")+",";
 								
 								
 								if(maxEntry != null) {
@@ -286,17 +287,24 @@ public class PMCMultiThreaded implements Runnable {
 										ListOfCOUNTRIES+=c+" ";
 										
 									 Record+=Tools.get(tool)+","+PDBID+","+maxEntry.getKey()+","+ListOfCOUNTRIES+","+COUNTRIES.get(0)+","+PublishedInOnePaper+"\n";
-									 RecordNoneRepeatedPubid+=Tools.get(tool)+","+PDBs+","+maxEntry.getKey()+","+ListOfCOUNTRIES+","+COUNTRIES.get(0)+","+PublishedInOnePaper+"\n";
+									 RecordNonRepeatedAuotherInfo+=Tools.get(tool)+","+PDBs+","+maxEntry.getKey()+","+ListOfCOUNTRIES+","+COUNTRIES.get(0)+","+PublishedInOnePaper+"\n";
 								}
 									
 								else {
 									Record+=Tools.get(tool)+","+PDBID+","+"-1,-1,-1,"+PublishedInOnePaper+"\n";
-								 RecordNoneRepeatedPubid+=Tools.get(tool)+","+PDBID+","+"-1,-1,-1,"+PublishedInOnePaper+"\n";
+									RecordNonRepeatedAuotherInfo+=Tools.get(tool)+","+PDBID+","+"-1,-1,-1,"+PublishedInOnePaper+"\n";
 								}
 								
 								AddCSVRecord(Record);
 								}
-								 CSVWithNoneRepeatedPubid+=RecordNoneRepeatedPubid;
+								 CSVWithNoneRepeatedPubid+=RecordNonRepeatedAuotherInfo;
+								 
+								 if(RecordNonRepeatedPubid.containsKey(j.getName().replaceAll("."+FilenameUtils.getExtension(j.getName()), ""))) { // if contained then, meaning two pipeline have used in this paper.
+									 RecordNonRepeatedPubid.remove(j.getName().replaceAll("."+FilenameUtils.getExtension(j.getName()), ""));
+								 }
+								 else {
+									 RecordNonRepeatedPubid.put(j.getName().replaceAll("."+FilenameUtils.getExtension(j.getName()),"") , RecordNonRepeatedAuotherInfo);
+								 }
 								
 				}
 			}
@@ -309,9 +317,15 @@ public class PMCMultiThreaded implements Runnable {
 		String CSV="ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper\n";
 		for(String record : CSVRecords)
 			CSV+=record;
+		
+		String RecordNonRepeatedPubidCSV="ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper\n";
+		for(String record : RecordNonRepeatedPubid.keySet())
+			RecordNonRepeatedPubidCSV+=RecordNonRepeatedPubid.get(record);
+		
 		new TxtFiles().WriteStringToTxtFile("AuthorsInformation.csv", CSV);
 		new TxtFiles().WriteStringToTxtFile("NonDuplicatedPipelineAuthorsInformation.csv", CSVWithNoneRepeatedPubid);
-		
+		new TxtFiles().WriteStringToTxtFile("NonDuplicatedPubid.csv", RecordNonRepeatedPubidCSV);
+
 	}
 
 	public void LoadDataFromPDB() throws IOException {
