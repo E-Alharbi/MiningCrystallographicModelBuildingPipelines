@@ -31,7 +31,7 @@ java -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccan
 The three CSV files: 
 - AuthorsInformation.csv: each record corresponded to a PDB. So, the authors' information repeated with each record. 
 - NonDuplicatedPipelineAuthorsInformation.csv: all PDB published in the same paper combine in one record. 
-- NonDuplicatedPubid.csv: the paper which has used multiple pipelines are omitted. 
+- NonDuplicatedPubid.csv: the paper which has included multiple pipelines are omitted. 
 
 
 
@@ -67,8 +67,8 @@ If you did not provide this keyword, it would be mining in all the PDB that obta
 - ElsevierToken= API key for Elsevier. If you do not have an Elsevier Token, you can get it from here  https://dev.elsevier.com and select get API key. 
 
 ### The outputs are  three CSV files contain the following
-- FoundPapers.csv: The papers that are found and there were used the pipeline/tool
-- PapersFoundButNotUsePipeline.csv: The papers that are found but there were not used the pipeline/tool
+- FoundPapers.csv: The papers that are found and they were used the pipeline/tool
+- PapersFoundButNotUsePipeline.csv: The papers that are found but they were not used the pipeline/tool
 - PapersNOTFound.csv: The papers that are not found.
 
 The CSV file contains the following:
@@ -98,7 +98,7 @@ You can filter that PDB that obtains from the PDB bank based on these fields:
 java -jar Mining.jar MiningAuthors FilterBy="[experimentalTechnique:X-RAY DIFFRACTION,SOLUTION NMR][publicationYear:2015-2020] Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" 
 ```
 - The above command will be mining in the PDB that is solved by only X-RAY DIFFRACTION or SOLUTION NMR and published between 2015-2020.
-- You can select to search for the papers that published in a specific year by using a comma instead of hyphen For example:
+- You can select to search for the papers that published in specific years by using a comma instead of hyphen For example:
 
 ```
 java -jar Mining.jar MiningAuthors FilterBy="[experimentalTechnique:X-RAY DIFFRACTION,SOLUTION NMR][publicationYear:2016,2018] Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" 
