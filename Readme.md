@@ -1,17 +1,17 @@
 # MiningCrystallographicModelBuildingPipelines
-A tool to mining in research papers that used crystallographic model building pipelines.
+A tool for mining in research papers that used crystallographic model-building pipelines.
  
 <a href="https://github.com/E-Alharbi/MiningCrystallographicModelBuildingPipelines/releases/latest/download/Mining.jar"> Download latest release    </a> 
 ## Mining authors information
 
 
-You can get a research paper first author's country as well as the co-authors countries.
+For mining in the first author's country as well as the co-authors' countries.
 ```
 java -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild"
 ```
-- The above command will fetch all PDB ids as well as Pubmed ID from the PDB bank and then obtains the research paper from https://europepmc.org/ by using the research paper PUB MED ID.
-- The papers which do not have PUB MED ID or not found in https://europepmc.org/ will be ignored.  
-- Pipeline: The name before the colon (:) is the pipeline official name that usually uses in the research paper when they refer to the pipeline and the name after the colon (:) is to use in the CSV file. This help when the pipeline mentions in different names in different research papers.
+- The above command will fetch all PDB ids as well as Pubmed ID from the PDB bank and then obtains the research paper from https://europepmc.org/ by using the research paper's PubMedID.
+- The papers which do not have PubMedID or are not found in https://europepmc.org/ will be ignored.  
+- Pipeline: The name before the colon (:) is the pipeline official name that is usually used in the research paper when they refer to the pipeline and the name after the colon (:) is to use in the CSV file. This helps when the pipeline names are mentioned in different forms in different research papers.
 ### The output of the above command is three CSV files that contain the following 
 
  
@@ -28,7 +28,7 @@ java -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccan
 | PublishedInOnePaper  | Set to T when this paper contains multiple PDB     |
 
 
-The three csv files: 
+The three CSV files: 
 - AuthorsInformation.csv: each record corresponded to a PDB. So, the authors' information repeated with each record. 
 - NonDuplicatedPipelineAuthorsInformation.csv: all PDB published in the same paper combine in one record. 
 - NonDuplicatedPubid.csv: the paper which has used multiple pipelines are omitted. 
@@ -46,25 +46,25 @@ UseExistsPapers=T
 
 ## Mining pipelines
 You can be mining only about the pipelines used in the research papers without mining in the authors' affiliation. The difference here from the "Mining authors information"  is that here we use more resources to obtain the research papers. 
-- The resources that use to obtain the research papers:
+- The resources that use to get the research papers:
 - https://europepmc.org/
 - https://www.elsevier.com/
 - https://onlinelibrary.wiley.com 
 
-Some of the above resources need to a membership. Elsevier will recognise if you have a membership from your IP address when you connect from your organisation/university. However, you need to register in Crossref and Onlinelibrary. 
+Some of the above resources need membership. Elsevier will recognise if you have a membership from your IP address when you connect from your organisation/university. However, you need to register in Crossref and Onlinelibrary. 
 
 ```
 java -jar Mining.jar MiningPipeline Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" PDBList=PDB.txt CrossrefEmail=youremail@email.com ElsevierToken=aaaa
 ```
 
-- PDBList :  a text file contains the PDB ids that you want to mining about. A PDB id in each line. For example: 
+- PDBList:  a text file containing the PDB ids that you want to mine about. A PDB id in each line. For example: 
 ```
 4ZYC
 4ZYF
 ```
 If you did not provide this keyword, it would be mining in all the PDB that obtain from the PDB bank.
 - CrossrefEmail: your email that registered in Crossref. If you did not register, you could register from here https://apps.crossref.org/clickthrough/researchers.
-- ElsevierToken= API key for Elsevier. If you did not have an Elsevier Token, you can get it from here  https://dev.elsevier.com and selects get API key. 
+- ElsevierToken= API key for Elsevier. If you do not have an Elsevier Token, you can get it from here  https://dev.elsevier.com and select get API key. 
 
 ### The outputs are  three CSV files contain the following
 - FoundPapers.csv: The papers that are found and there were used the pipeline/tool
@@ -76,7 +76,7 @@ The CSV file contains the following:
 | Field  | Description |
 | ------------- | ------------- |
 | PDB  | PDB id  |
-| Pipeline  | the tool/pipeline that used. Only in FoundPapers.csv   |
+| Pipeline  | the tool/pipeline that was used. Only in FoundPapers.csv   |
 | PaperLink  | DOI link    |
 
 ## Filtering the PDB bank data 
@@ -97,7 +97,7 @@ You can filter that PDB that obtains from the PDB bank based on these fields:
 ```
 java -jar Mining.jar MiningAuthors FilterBy="[experimentalTechnique:X-RAY DIFFRACTION,SOLUTION NMR][publicationYear:2015-2020] Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" 
 ```
-- The above command will be mining in the PDB that solved by only X-RAY DIFFRACTION or SOLUTION NMR and published between 2015-2020.
+- The above command will be mining in the PDB that is solved by only X-RAY DIFFRACTION or SOLUTION NMR and published between 2015-2020.
 - You can select to search for the papers that published in a specific year by using a comma instead of hyphen For example:
 
 ```
@@ -145,4 +145,6 @@ All the fields mentioned in the above table can be used in the same way as in th
 
 ## Multithreaded
 - The tool supports Multithreaded by setting Multithreaded=T 
-- A large number of threads might cause the resources to block the http connections and result in freezing the tool. 
+- A large number of threads might cause the resources to block the Http connections and result in freezing the tool. 
+
+
