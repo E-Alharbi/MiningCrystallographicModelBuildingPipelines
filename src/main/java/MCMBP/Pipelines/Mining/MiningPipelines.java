@@ -18,6 +18,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.json.simple.parser.ParseException;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -65,7 +66,7 @@ public class MiningPipelines implements Runnable{
 		Vector<String> PDB= new Vector<String>();
 		if(PDBList.trim().length()!=0) {
 			 PDB= new TxtFiles().ReadIntoVec(PDBList,true);
-				System.out.println("FilterBy will not be used as UseExistsPapers set to true");
+				System.out.println("FilterBy will not be used because PDBList is used");
 
 		}
 		else {
@@ -124,10 +125,12 @@ if(PDBIDAsFRomTheExcel==null)
 	return;
 PDBIDAsFRomTheExcel=PDBIDAsFRomTheExcel.substring(0, 4);
 String PDBBankRes=null;
-
+HashMap<String, HashMap<String, String>> pdbbank=null;
 try {
 	PDBBankRes = new Downloder().GetHttpRequste("https://www.rcsb.org/pdb/rest/customReport.csv?pdbids="+PDBIDAsFRomTheExcel+"&customReportColumns=pubmedId,doi&primaryOnly=1&service=wsfile&format=csv");
-} catch (IOException e1) {
+	 pdbbank= new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId");
+	 pdbbank=new PDBe().UpdateDOI(pdbbank, PDBIDAsFRomTheExcel);// sometimes, PDB bank does not provide a DOI so we obtain the DOI from PDBe 
+} catch (IOException | ParseException e1) {
 	// TODO Auto-generated catch block
 	//e1.printStackTrace();
 }
@@ -136,20 +139,20 @@ try {
 
 String pubmedId="";
 try {
-	if(new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId").size()>0) { // in case not data found in PDBBank
-	pubmedId=new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId").get(PDBIDAsFRomTheExcel).get("pubmedId");
+	if(pdbbank.size()>0) { // in case not data found in PDBBank
+	pubmedId=pdbbank.get(PDBIDAsFRomTheExcel).get("pubmedId");
 	String PMC=  new Downloder().GetHttpRequste("https://www.ebi.ac.uk/europepmc/webservices/rest/"+pubmedId+"/fullTextXML");
 	if(PMC.trim().length()==0) {
-		PMC=new Downloder().GetHttpRequste("https://api.elsevier.com/content/article/doi/"+new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId").get(PDBIDAsFRomTheExcel).get("doi")+"?APIKey="+ElsevierToken);
+		PMC=new Downloder().GetHttpRequste("https://api.elsevier.com/content/article/doi/"+pdbbank.get(PDBIDAsFRomTheExcel).get("doi")+"?APIKey="+ElsevierToken);
 	if(PMC.trim().length()==0) {
 		//System.out.println(new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId").get(PDBID).get(0).get("doi"));
 		
-		PMC=new Downloder().GetHttpRequste("https://doi.crossref.org/servlet/query?pid="+CrossrefEmail+"&format=unixref&id="+new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId").get(PDBIDAsFRomTheExcel).get("doi"));
+		PMC=new Downloder().GetHttpRequste("https://doi.crossref.org/servlet/query?pid="+CrossrefEmail+"&format=unixref&id="+pdbbank.get(PDBIDAsFRomTheExcel).get("doi"));
 		if(PMC.contains("collection property=")) {
 			//System.out.println(PMC.split("collection property=")[1].split("</collection>")[0]);
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder db = dbf.newDocumentBuilder();
-			Document doc = db.parse(new URL("https://doi.crossref.org/servlet/query?pid="+CrossrefEmail+"&format=unixref&id="+new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId").get(PDBIDAsFRomTheExcel).get("doi")).openStream());
+			Document doc = db.parse(new URL("https://doi.crossref.org/servlet/query?pid="+CrossrefEmail+"&format=unixref&id="+pdbbank.get(PDBIDAsFRomTheExcel).get("doi")).openStream());
 			
 			if(!PMC.contains("syndication")) { // links contain syndication do not work  
 		
@@ -228,7 +231,7 @@ try {
 
 	
 	if(PMC.length()==0) {
-		AddToPaperNotFound(PDBIDAsFRomTheExcel+","+new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId").get(PDBIDAsFRomTheExcel).get("doi")+"\n");
+		AddToPaperNotFound(PDBIDAsFRomTheExcel+","+pdbbank.get(PDBIDAsFRomTheExcel).get("doi")+"\n");
 		
 	}
 	
@@ -238,14 +241,14 @@ try {
 	for(String tool : Tools.keySet() ) {
 		if(PMC.toLowerCase().contains(tool)) {
 			
-			AddToCSV(PDBIDAsFRomTheExcel+","+Tools.get(tool)+","+new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId").get(PDBIDAsFRomTheExcel).get("doi")+"\n");
+			AddToCSV(PDBIDAsFRomTheExcel+","+Tools.get(tool)+","+pdbbank.get(PDBIDAsFRomTheExcel).get("doi")+"\n");
 			
 			UsePipeline=true;
 		}
 		}
 	if(UsePipeline==false && PMC.length()!=0)
 	
-	AddToPaperFoundButNotUsePipeline(PDBIDAsFRomTheExcel+","+new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId").get(PDBIDAsFRomTheExcel).get("doi")+"\n");	
+	AddToPaperFoundButNotUsePipeline(PDBIDAsFRomTheExcel+","+pdbbank.get(PDBIDAsFRomTheExcel).get("doi")+"\n");	
 	}
 } catch (DOMException | IOException | ParserConfigurationException | SAXException e) {
 	// TODO Auto-generated catch block
