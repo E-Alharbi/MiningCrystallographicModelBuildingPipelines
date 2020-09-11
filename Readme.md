@@ -1,5 +1,5 @@
 # MiningCrystallographicModelBuildingPipelines
-A tool for mining in research papers that used crystallographic model-building pipelines.
+A tool for mining in research papers that used crystallographic model-building pipelines and recognizes which pipeline is used based on the information in the research paper.
  
 <a href="https://github.com/E-Alharbi/MiningCrystallographicModelBuildingPipelines/releases/latest/download/Mining.jar"> Download latest release    </a> 
 ## Mining authors information
@@ -29,9 +29,9 @@ java -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccan
 
 
 The three CSV files: 
-- AuthorsInformation.csv: each record corresponded to a PDB. So, the authors' information repeated with each record. 
+- AuthorsInformation.csv: each record corresponded to a PDB. So, the authors' information will be repeated in case of multiple PDB published by the same author. 
 - NonDuplicatedPipelineAuthorsInformation.csv: all PDB published in the same paper combine in one record. 
-- NonDuplicatedPubid.csv: the paper which has included multiple pipelines are omitted. 
+- NonDuplicatedPubid.csv: the paper which has mentioned multiple pipelines are omitted. 
 
 
 
@@ -67,8 +67,8 @@ If you did not provide this keyword, it would be mining in all the PDB that obta
 - ElsevierToken= API key for Elsevier. If you do not have an Elsevier Token, you can get it from here  https://dev.elsevier.com and select get API key. 
 
 ### The outputs are  three CSV files contain the following
-- FoundPapers.csv: The papers that are found and they were used the pipeline/tool
-- PapersFoundButNotUsePipeline.csv: The papers that are found but they were not used the pipeline/tool
+- FoundPapers.csv: The papers that are found and they were mentioned the pipeline/tool
+- PapersFoundButNotUsePipeline.csv: The papers that are found but they were not mentioned the pipeline/tool
 - PapersNOTFound.csv: The papers that are not found.
 
 The CSV file contains the following:
