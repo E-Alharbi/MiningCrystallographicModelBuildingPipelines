@@ -2,8 +2,11 @@ package MCMBP.Authors.Mining;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Vector;
+
+import org.json.simple.parser.ParseException;
 
 import MCMBP.Pipelines.Mining.MiningPipelines;
 
@@ -11,22 +14,30 @@ import MCMBP.Pipelines.Mining.MiningPipelines;
 
 public class Mining {
 
-	public static void main(String[] args) throws FileNotFoundException, IOException {
+	public static void main(String[] args) throws FileNotFoundException, IOException, ParseException, URISyntaxException, InterruptedException {
 		// TODO Auto-generated method stub
 
 		Vector<String> Parm = new Vector<String>();
 		boolean Multithreaded=false;
-		if(checkArg(Parm,"Multithreaded").trim().length()!=0)
-		{
-			if(checkArg(Parm,"Multithreaded").equals("T"))
-				Multithreaded=true;
-		}
+		
 		for (int i = 0; i < args.length; ++i) {
 
 			if (args[i].contains("=")) {
 				Parm.addAll(Arrays.asList(args[i].split("=")));
 			}
 
+		}
+		boolean ExtractingInformation=true;
+		if(checkArg(Parm,"ExtractingInformation").trim().length()!=0)
+		{
+			if(checkArg(Parm,"ExtractingInformation").equals("F"))
+				ExtractingInformation=false;
+		}
+		
+		if(checkArg(Parm,"Multithreaded").trim().length()!=0)
+		{
+			if(checkArg(Parm,"Multithreaded").equals("T"))
+				Multithreaded=true;
 		}
 		if(args[0].equals("MiningAuthors")) {
 			
@@ -52,8 +63,14 @@ public class Mining {
 			
 			
 			
-			new PMCMultiThreaded().Mining(checkArg(Parm,"FilterBy"),checkArg(Parm,"Pipeline"),UseExistsPapers,Multithreaded);
+			new PMCMultiThreaded().Mining(checkArg(Parm,"FilterBy"),checkArg(Parm,"Pipeline"),UseExistsPapers,Multithreaded,checkArg(Parm,"CrossrefEmail"),checkArg(Parm,"ElsevierToken"),checkArg(Parm,"PDBList"),ExtractingInformation);
 		}
+		
+		if(args[0].equals("Cluster")) {
+			
+			new Cluster().CreateJobs(checkArg(Parm,"FilterBy"),checkArg(Parm,"Pipeline"),checkArg(Parm,"CrossrefEmail"),checkArg(Parm,"ElsevierToken"),checkArg(Parm,"PDBList"),checkArg(Parm,"JobParameters"));
+		}
+		
 		
 	if(args[0].equals("MiningPipeline")) {
 			
