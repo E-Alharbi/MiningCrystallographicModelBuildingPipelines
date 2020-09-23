@@ -24,6 +24,9 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import MCMBP.Authors.Mining.PMCMultiThreaded;
+import MCMBP.Resources.PDBe;
+import MCMBP.Resources.crossref;
+import MCMBP.Resources.elsevier;
 import MCMBP.Utilities.CSVReader;
 import MCMBP.Utilities.Downloder;
 import MCMBP.Utilities.TxtFiles;
@@ -57,7 +60,7 @@ public class MiningPipelines implements Runnable{
 		}
 		return null;
 	}
-	public  void Mining(String Pipeline, String PDBList, String CrossrefEmail1, String ElsevierToken1, String FilterBy, boolean Multithreaded) throws IOException {
+	public  void Mining(String Pipeline, String PDBList, String CrossrefEmail1, String ElsevierToken1, String FilterBy, boolean Multithreaded) throws IOException, ParseException {
 		// TODO Auto-generated method stub
 		CrossrefEmail=CrossrefEmail1;
 		ElsevierToken=ElsevierToken1;
@@ -71,7 +74,7 @@ public class MiningPipelines implements Runnable{
 		}
 		else {
 			PMCMultiThreaded pmc= 	new PMCMultiThreaded();
-			pmc.PrepareDatasets(FilterBy);
+			//pmc.PrepareDatasets(FilterBy);
 			for(String pdb : pmc.PMCAndPDB.keySet()) {
 				PDB.add(pdb);
 			}
@@ -139,93 +142,15 @@ try {
 
 String pubmedId="";
 try {
-	if(pdbbank.size()>0) { // in case not data found in PDBBank
+	if(pdbbank.size()>0) { // in case no data found in PDBBank
 	pubmedId=pdbbank.get(PDBIDAsFRomTheExcel).get("pubmedId");
 	String PMC=  new Downloder().GetHttpRequste("https://www.ebi.ac.uk/europepmc/webservices/rest/"+pubmedId+"/fullTextXML");
 	if(PMC.trim().length()==0) {
-		PMC=new Downloder().GetHttpRequste("https://api.elsevier.com/content/article/doi/"+pdbbank.get(PDBIDAsFRomTheExcel).get("doi")+"?APIKey="+ElsevierToken);
-	if(PMC.trim().length()==0) {
-		//System.out.println(new CSVReader().ReadIntoHashMap(PDBBankRes, "structureId").get(PDBID).get(0).get("doi"));
+		PMC=new elsevier().Get(ElsevierToken, pdbbank.get(PDBIDAsFRomTheExcel).get("doi"));
 		
-		PMC=new Downloder().GetHttpRequste("https://doi.crossref.org/servlet/query?pid="+CrossrefEmail+"&format=unixref&id="+pdbbank.get(PDBIDAsFRomTheExcel).get("doi"));
-		if(PMC.contains("collection property=")) {
-			//System.out.println(PMC.split("collection property=")[1].split("</collection>")[0]);
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			DocumentBuilder db = dbf.newDocumentBuilder();
-			Document doc = db.parse(new URL("https://doi.crossref.org/servlet/query?pid="+CrossrefEmail+"&format=unixref&id="+pdbbank.get(PDBIDAsFRomTheExcel).get("doi")).openStream());
-			
-			if(!PMC.contains("syndication")) { // links contain syndication do not work  
+		if(PMC.trim().length()==0) {
 		
-		//System.out.println(doc.getElementsByTagName("resource").item(0).getTextContent());
-		//System.out.println(doc.getElementsByTagName("resource").item(1).getTextContent());
-		if(doc.getElementsByTagName("resource").item(1).getTextContent().toLowerCase().contains("pdf")) {
-			
-	
-		
-		File myFile = new File(new Downloder().Download(doc.getElementsByTagName("resource").item(1).getTextContent().trim(),"pdf"));
-	
-	     PDDocument docpdf;
-		try {
-			docpdf = PDDocument.load(myFile);
-			 PDFTextStripper stripper = new PDFTextStripper();
-		        String text = stripper.getText(docpdf);
-		        PMC=text;
-		       // System.out.println("Text size: " + text.length() + " characters:");
-		        docpdf.close();
-		        FileUtils.deleteQuietly(myFile);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			
-		} 
-	
-	       
-	        //System.out.println(text);
-	    }
-		else {
-			//System.out.println("not pdf");
-			
-			PMC=new TxtFiles().readFileAsString(new Downloder().Download(doc.getElementsByTagName("resource").item(1).getTextContent().trim(),"html"));
-		}
-		
-	   	
-	
-			
-			
-			
-		
-	
-	}
-	else {
-		
-	if(doc.getElementsByTagName("resource").item(0).getTextContent().contains("gad")) {
-		//System.out.println("GAD");
-		
-		PMC=new TxtFiles().readFileAsString(new Downloder().Download("http://genesdev.cshlp.org/content/"+doc.getElementsByTagName("item_number").item(0).getTextContent()+".full","html"));
-	}
-	else if(doc.getElementsByTagName("resource").item(0).getTextContent().contains("jbc")) {
-		//System.out.println("JBC");
-		String ID=doc.getElementsByTagName("item_number").item(0).getTextContent().replaceAll("/jbc/", "");
-		ID=ID.replaceAll(".atom", "");
-		//System.out.println(ID);
-		
-		PMC=new TxtFiles().readFileAsString(new Downloder().Download("https://www.jbc.org/content/"+doc.getElementsByTagName("item_number").item(0).getTextContent()+".full","html"));
-	}
-	else {
-		
-		//System.out.println("CAN");
-		
-		PMC=new TxtFiles().readFileAsString(new Downloder().Download(doc.getElementsByTagName("resource").item(0).getTextContent().trim(),"html"));
-		
-	}
-	
-	
-	
-	
-	
-	}
-		
-		}
+		PMC=new crossref().Get(CrossrefEmail, pdbbank.get(PDBIDAsFRomTheExcel).get("doi"),pdbbank.get(PDBIDAsFRomTheExcel).get("structureId"));
 	}
 	}
 
