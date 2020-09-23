@@ -1,4 +1,4 @@
-package MCMBP.Pipelines.Mining;
+package MCMBP.Resources;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -20,15 +20,17 @@ public class PDBe {
 
 	
 	public HashMap<String, HashMap<String, String>> UpdateDOI(HashMap<String, HashMap<String, String>> pdbbank, String PDB) throws IOException, ParseException {
+		
 		String pdbe=new Downloder().GetHttpRequste("https://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/"+PDB);
+		if(pdbe.trim().length()!=0) {
 		HashMap<String, String> PDBe= new JSONReader().JSONToHashMap(pdbe);
 		
-		for(String pdb : pdbbank.keySet()) {
-			String pubmed_id=pdbbank.get(pdb).get("pubmedId");
-			if(pdbbank.get(pdb).get("doi").trim().length()==0)
-			pdbbank.get(pdb).put("doi", PDBe.get(pubmed_id));
+		//for(String pdb : pdbbank.keySet()) {
+			String pubmed_id=pdbbank.get(PDB).get("pubmedId");
+			if(pdbbank.get(PDB).get("doi").trim().length()==0)
+			pdbbank.get(PDB).put("doi", PDBe.get(pubmed_id));
+		//}
 		}
-		
 		return pdbbank;
 	}
 }
