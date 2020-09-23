@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import java.time.Instant;
-
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,6 +19,7 @@ import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -26,10 +27,13 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.json.simple.parser.ParseException;
+import org.xml.sax.SAXException;
 
-
-
-
+import MCMBP.Resources.PDBe;
+import MCMBP.Resources.crossref;
+import MCMBP.Resources.elsevier;
 import MCMBP.Utilities.CSVFilter;
 import MCMBP.Utilities.Downloder;
 
@@ -41,6 +45,14 @@ import me.tongfei.progressbar.ProgressBar;
 
 public class PMCMultiThreaded implements Runnable {
 
+	static String CrossrefEmail="";
+	static String ElsevierToken="";
+	public static void main(String[] args) throws FileNotFoundException, IOException, ParseException {
+		
+		
+	
+	}
+	
 	
 	public static HashMap<String,HashMap<String,String>> PMCAndPDB = new HashMap<String,HashMap<String,String>> ();
 
@@ -84,7 +96,7 @@ public class PMCMultiThreaded implements Runnable {
 	}
 	
 	void UpdateLog() {
-		if(new File("xml").exists()&& new File("json").exists()) {
+		if(new File("papers").exists()&& new File("json").exists()) {
 			
 			
 			
@@ -93,7 +105,7 @@ public class PMCMultiThreaded implements Runnable {
 			
 		}
 	}
-	public void PrepareDatasets(String FilterBy) throws IOException {
+	public void PrepareDatasets(String FilterBy , String PDBList) throws IOException, ParseException {
 		HashMap<String,Vector<String>> FilterByKeywordsAndValues= new HashMap<String,Vector<String>>();
 		if(FilterBy.trim().length()!=0) {
 		String []FilterByKeywords=FilterBy.split("\\]");
@@ -105,7 +117,9 @@ public class PMCMultiThreaded implements Runnable {
 		}
 		}
 		
+		if(!new File("PDBBank.csv").exists())
 		new PMCMultiThreaded().LoadDataFromPDB();
+		
 		CSVParser parser = new CSVParser(new FileReader("PDBBank.csv"), CSVFormat.DEFAULT);
 		List<CSVRecord> list = parser.getRecords();
 		
@@ -118,6 +132,7 @@ public class PMCMultiThreaded implements Runnable {
 			index++;
 		}
 		
+		list.remove(0);// remove headers record
 		
 		
 		for(String FilterKeywords : FilterByKeywordsAndValues.keySet()) {
@@ -125,32 +140,53 @@ public class PMCMultiThreaded implements Runnable {
 			list=new CSVFilter().FilterCSV(FilterByKeywordsAndValues.get(FilterKeywords),HeadersWithIndex,list,FilterKeywords);	
 		}
 		
+		if(PDBList.trim().length()!=0) {
+		List<CSVRecord> ToRemove = new ArrayList<CSVRecord>();
+		Vector<String> PDB= new TxtFiles().ReadIntoVec(PDBList,true);
+		
+		for(CSVRecord record : list) {
+			if(!PDB.contains(record.get(HeadersWithIndex.get("structureId")).trim()))
+				ToRemove.add(record);
+				
+		}
+		
+		for(CSVRecord pdb: ToRemove) {
+			list.remove(pdb);
+		}
+		}
 		
 		
-		
+		System.out.println("Number of PDB "+list.size());
 		
 		for (CSVRecord record : list) {
+			
+			
+			
 			if(record.get(HeadersWithIndex.get("pubmedId")).length()!=0) {
 				HashMap<String,String> RequiredCol=new HashMap<String,String>();
 				RequiredCol.put("pubmedId", record.get(HeadersWithIndex.get("pubmedId")));
 				RequiredCol.put("publicationYear", record.get(HeadersWithIndex.get("publicationYear")));
 				RequiredCol.put("resolution", record.get(HeadersWithIndex.get("resolution")));
+				RequiredCol.put("doi", record.get(HeadersWithIndex.get("doi")));
 
-				
 				PMCAndPDB.put(record.get(HeadersWithIndex.get("structureId")), RequiredCol);
+				
+				
+
 			}
+			
 		}
-		
-		
-		
 		parser.close(); 
+		
+		
 		
 	}
 	
-	public  void Mining (String FilterBy,String Pipeline, boolean UseExistsPapers, boolean Multithreaded) throws FileNotFoundException, IOException {
+	public  void Mining (String FilterBy,String Pipeline, boolean UseExistsPapers, boolean Multithreaded,String crossrefEmail,String elsevierToken, String PDBList , boolean ExtractingInformation) throws FileNotFoundException, IOException, ParseException {
 		// TODO Auto-generated method stub
 		
-		
+		CrossrefEmail=crossrefEmail;
+		ElsevierToken=elsevierToken;
 		
 		System.out.println("FilterBy "+FilterBy);
 		
@@ -161,20 +197,20 @@ public class PMCMultiThreaded implements Runnable {
 		}
 		
 		
-		PrepareDatasets(FilterBy);
+		PrepareDatasets(FilterBy,PDBList);
 		System.out.println("Number of PDB after filtering and which have PUB MED ID "+PMCAndPDB.size());
 		NLP.LoadNLP();
 		start = Instant.now();
 		pb = new ProgressBar("Downloading papers", PMCAndPDB.size());
 		if(UseExistsPapers==false) {
-		if(new File("json").exists())
-			FileUtils.deleteDirectory(new File("json"));
-		if(new File("xml").exists())
-			FileUtils.deleteDirectory(new File("xml"));
+		//if(new File("json").exists())
+		//	FileUtils.deleteDirectory(new File("json"));
+		//if(new File("papers").exists())
+			//FileUtils.deleteDirectory(new File("papers"));
 		
 		
 		CheckDirAndFile("json");
-		CheckDirAndFile("xml");
+		CheckDirAndFile("papers");
 		 
 			
 		 if(Multithreaded==false) {
@@ -187,6 +223,7 @@ public class PMCMultiThreaded implements Runnable {
 		 }
 			
 			if(Multithreaded==true) {
+				
 			ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 			while (!PMCAndPDB.isEmpty()) {
 					es.execute(new PMCMultiThreaded());// new thread
@@ -203,20 +240,21 @@ public class PMCMultiThreaded implements Runnable {
 		pb.close();
 		
 		
+		if(ExtractingInformation==true) {
 	
 	
-		PrepareDatasets(FilterBy);
+		PrepareDatasets(FilterBy,PDBList);
 		//NLP
 		File [] json= new File("json").listFiles();
-		File [] xml= new File("xml").listFiles();
+		File [] papers= new File("papers").listFiles();
 		NLP.LoadNLP();
-		pb = new ProgressBar("Extracting information ", xml.length);
-		String CSVWithNoneRepeatedPubid="ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper\n";
+		pb = new ProgressBar("Extracting information ", papers.length);
+		String CSVWithNoneRepeatedPubid="ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper,journal,occurance\n";
 		String RecordNonRepeatedAuotherInfo="";
 		HashMap<String,String> RecordNonRepeatedPubid  = new HashMap<String,String>();
 		for(File j: json) {
 			File Paper=null;
-			for(File x: xml) {
+			for(File x: papers) {
 				if(j.getName().replaceAll(FilenameUtils.getExtension(j.getName()), "").equals(x.getName().replaceAll(FilenameUtils.getExtension(x.getName()), ""))) {
 					Paper=x;
 				}
@@ -226,7 +264,10 @@ public class PMCMultiThreaded implements Runnable {
 			
 			pb.step();
 			for(String tool : Tools.keySet() ) {
+				
+				
 				if(Papertxt.toLowerCase().contains(tool)) {
+					int occurance = StringUtils.countMatches(Papertxt.toLowerCase(),tool);
 					String Record="";
 					
 					
@@ -236,7 +277,7 @@ public class PMCMultiThreaded implements Runnable {
 					
 					
 					List<String> authors=new PMCMultiThreaded().ListofAffiliation(jsontxt);
-								
+					String journalname= new PMCMultiThreaded().journal(jsontxt);
 							if(authors!=null) {
 								for(int a=0 ;a < authors.size(); ++a) {
 			
@@ -286,13 +327,13 @@ public class PMCMultiThreaded implements Runnable {
 										
 										ListOfCOUNTRIES+=c+" ";
 										
-									 Record+=Tools.get(tool)+","+PDBID+","+maxEntry.getKey()+","+ListOfCOUNTRIES+","+COUNTRIES.get(0)+","+PublishedInOnePaper+"\n";
-									 RecordNonRepeatedAuotherInfo+=Tools.get(tool)+","+PDBs+","+maxEntry.getKey()+","+ListOfCOUNTRIES+","+COUNTRIES.get(0)+","+PublishedInOnePaper+"\n";
+									 Record+=Tools.get(tool)+","+PDBID+","+maxEntry.getKey()+","+ListOfCOUNTRIES+","+COUNTRIES.get(0)+","+PublishedInOnePaper+","+journalname+","+occurance+"\n";
+									 RecordNonRepeatedAuotherInfo+=Tools.get(tool)+","+PDBs+","+maxEntry.getKey()+","+ListOfCOUNTRIES+","+COUNTRIES.get(0)+","+PublishedInOnePaper+","+journalname+","+occurance+"\n";
 								}
 									
 								else {
-									Record+=Tools.get(tool)+","+PDBID+","+"-1,-1,-1,"+PublishedInOnePaper+"\n";
-									RecordNonRepeatedAuotherInfo+=Tools.get(tool)+","+PDBID+","+"-1,-1,-1,"+PublishedInOnePaper+"\n";
+									Record+=Tools.get(tool)+","+PDBID+","+"-1,-1,-1,"+PublishedInOnePaper+","+journalname+"\n";
+									RecordNonRepeatedAuotherInfo+=Tools.get(tool)+","+PDBID+","+"-1,-1,-1,"+PublishedInOnePaper+","+journalname+","+occurance+"\n";
 								}
 								
 								AddCSVRecord(Record);
@@ -314,22 +355,22 @@ public class PMCMultiThreaded implements Runnable {
 		
 		
 		
-		String CSV="ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper\n";
+		String CSV="ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper,journal,occurance\n";
 		for(String record : CSVRecords)
 			CSV+=record;
 		
-		String RecordNonRepeatedPubidCSV="ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper\n";
+		String RecordNonRepeatedPubidCSV="ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper,journal,occurance\n";
 		for(String record : RecordNonRepeatedPubid.keySet())
 			RecordNonRepeatedPubidCSV+=RecordNonRepeatedPubid.get(record);
 		
 		new TxtFiles().WriteStringToTxtFile("AuthorsInformation.csv", CSV);
 		new TxtFiles().WriteStringToTxtFile("NonDuplicatedPipelineAuthorsInformation.csv", CSVWithNoneRepeatedPubid);
 		new TxtFiles().WriteStringToTxtFile("NonDuplicatedPubid.csv", RecordNonRepeatedPubidCSV);
-
+	}
 	}
 
 	public void LoadDataFromPDB() throws IOException {
-		URL url = new URL("http://www.rcsb.org/pdb/rest/customReport.csv?pdbids=*&customReportColumns=structureId,pmc,pubmedId,structureTitle,experimentalTechnique,publicationYear,resolution&service=wsfile&format=csv");
+		URL url = new URL("http://www.rcsb.org/pdb/rest/customReport.csv?pdbids=*&customReportColumns=structureId,pmc,pubmedId,structureTitle,experimentalTechnique,publicationYear,resolution,doi&primaryOnly=1&service=wsfile&format=csv");
 		FileUtils.copyURLToFile(url, new File("PDBBank.csv"));
 		
 	}
@@ -338,11 +379,30 @@ public class PMCMultiThreaded implements Runnable {
 		// TODO Auto-generated method stub
 		
 		Map.Entry<String,HashMap<String,String>> pmc = PickPMCID();
-		if(pmc==null) {
+if(pmc==null) {
 			
 			
 			return;
 		}
+		
+		HashMap<String, HashMap<String, String>> pmcForPDBe= new HashMap<String, HashMap<String, String>>();
+		
+		pmcForPDBe.put(pmc.getKey(), pmc.getValue());
+		
+		if(pmc.getValue().get("doi").trim().length()==0)
+			try {
+				pmcForPDBe=new PDBe().UpdateDOI(pmcForPDBe, pmc.getKey() );
+			} catch (IOException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			} catch (ParseException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+		pmc = pmcForPDBe.entrySet().iterator().next();
+		
+		System.out.println("PDB "+pmc+" thread "+Thread.currentThread().getId());
+		
 		UpdateLog();
 		
 		
@@ -358,8 +418,39 @@ public class PMCMultiThreaded implements Runnable {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		System.out.println("PDB europepmc "+pmc);
+		if(Txt.trim().length()==0) {
+			System.out.println("Trying elsevier "+pmc);
+			try {
+				Txt=	new elsevier().Get(ElsevierToken, pmc.getValue().get("doi"));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
+		System.out.println("PDB Elsevier "+pmc);
+		if(Txt.trim().length()==0) { // try crossref
+			System.out.println("Trying crossref "+pmc);
+			try {
+				Txt=	new crossref().Get(CrossrefEmail, pmc.getValue().get("doi"), pmc.getValue().get("structureId"));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ParserConfigurationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SAXException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		System.out.println("PDB crossref "+pmc);
+		
 		
 		if(Txt.length()!=0) {
+			System.out.println("Found "+pmc);
 			url="https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="+pmc.getValue().get("pubmedId")+"&resultType=core&format=json";
 			
 			try {
@@ -367,7 +458,8 @@ public class PMCMultiThreaded implements Runnable {
 				if(json.length()!=0) {
 					
 					new TxtFiles().WriteStringToTxtFile("json/"+pmc.getValue().get("pubmedId")+".json", json);
-					new TxtFiles().WriteStringToTxtFile("xml/"+pmc.getValue().get("pubmedId")+".xml", Txt);
+					new TxtFiles().WriteStringToTxtFile("papers/"+pmc.getValue().get("pubmedId")+".txt", Txt);
+					
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -376,6 +468,7 @@ public class PMCMultiThreaded implements Runnable {
 			
 		}
 		
+		System.out.println("PDB json "+pmc);
 		
 	}
 	
@@ -390,6 +483,24 @@ public class PMCMultiThreaded implements Runnable {
 				return authors;
 		}
 		System.out.println("Error author Affiliations not found "+ Thread.currentThread().getId());
+		return null;
+		
+		
+			
+		
+		
+	}
+String journal(String json){
+		
+		Vector<String> JsonRegx=new Vector<String>();
+		JsonRegx.add("$..journal.title");
+		
+		for(int i=0 ; i < JsonRegx.size();++i) {
+			List<String> journal = com.jayway.jsonpath.JsonPath.parse(json).read(JsonRegx.get(i));
+			if(journal.size()!=0)
+				return journal.get(0).replaceAll(",", " ");
+		}
+		System.out.println("Error journal name not found "+ Thread.currentThread().getId());
 		return null;
 		
 		
