@@ -5,9 +5,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-
+import java.net.MalformedURLException;
 import java.net.URL;
-
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +19,13 @@ import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -29,6 +35,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.simple.parser.ParseException;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import MCMBP.Resources.PDBe;
@@ -59,7 +67,7 @@ public class PMCMultiThreaded implements Runnable {
 	static int PMCidsIndex=0;
 	static Vector<String> CSVRecords=  new Vector<String>();
 	static HashMap<String,String> Tools= new HashMap<String,String>();
-	static Instant start;
+	//static Instant start;
 	
 	static ProgressBar pb ;
 	
@@ -96,7 +104,7 @@ public class PMCMultiThreaded implements Runnable {
 	}
 	
 	void UpdateLog() {
-		if(new File("papers").exists()&& new File("json").exists()) {
+		if(new File("papers").exists()&& new File("affiliations").exists()) {
 			
 			
 			
@@ -156,7 +164,7 @@ public class PMCMultiThreaded implements Runnable {
 		}
 		
 		
-		System.out.println("Number of PDB "+list.size());
+		
 		
 		for (CSVRecord record : list) {
 			
@@ -182,7 +190,7 @@ public class PMCMultiThreaded implements Runnable {
 		
 	}
 	
-	public  void Mining (String FilterBy,String Pipeline, boolean UseExistsPapers, boolean Multithreaded,String crossrefEmail,String elsevierToken, String PDBList , boolean ExtractingInformation) throws FileNotFoundException, IOException, ParseException {
+	public  void Mining (String FilterBy,String Pipeline, boolean UseExistsPapers, boolean Multithreaded,String crossrefEmail,String elsevierToken, String PDBList , boolean ExtractingInformation , String ApplicationIdBack4app , String APIKeyBack4app) throws FileNotFoundException, IOException, ParseException, XPathExpressionException, ParserConfigurationException, SAXException {
 		// TODO Auto-generated method stub
 		
 		CrossrefEmail=crossrefEmail;
@@ -200,7 +208,7 @@ public class PMCMultiThreaded implements Runnable {
 		PrepareDatasets(FilterBy,PDBList);
 		System.out.println("Number of PDB after filtering and which have PUB MED ID "+PMCAndPDB.size());
 		NLP.LoadNLP();
-		start = Instant.now();
+		//start = Instant.now();
 		pb = new ProgressBar("Downloading papers", PMCAndPDB.size());
 		if(UseExistsPapers==false) {
 		//if(new File("json").exists())
@@ -209,7 +217,7 @@ public class PMCMultiThreaded implements Runnable {
 			//FileUtils.deleteDirectory(new File("papers"));
 		
 		
-		CheckDirAndFile("json");
+		CheckDirAndFile("affiliations");
 		CheckDirAndFile("papers");
 		 
 			
@@ -218,7 +226,7 @@ public class PMCMultiThreaded implements Runnable {
 				
 				
 				new PMCMultiThreaded().run();
-				//UpdateLog();
+				
 		}
 		 }
 			
@@ -245,14 +253,14 @@ public class PMCMultiThreaded implements Runnable {
 	
 		PrepareDatasets(FilterBy,PDBList);
 		//NLP
-		File [] json= new File("json").listFiles();
+		File [] affiliations= new File("affiliations").listFiles();
 		File [] papers= new File("papers").listFiles();
 		NLP.LoadNLP();
 		pb = new ProgressBar("Extracting information ", papers.length);
 		String CSVWithNoneRepeatedPubid="ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper,journal,occurance\n";
 		String RecordNonRepeatedAuotherInfo="";
 		HashMap<String,String> RecordNonRepeatedPubid  = new HashMap<String,String>();
-		for(File j: json) {
+		for(File j: affiliations) {
 			File Paper=null;
 			for(File x: papers) {
 				if(j.getName().replaceAll(FilenameUtils.getExtension(j.getName()), "").equals(x.getName().replaceAll(FilenameUtils.getExtension(x.getName()), ""))) {
@@ -260,13 +268,14 @@ public class PMCMultiThreaded implements Runnable {
 				}
 			}
 			String Papertxt=new TxtFiles().readFileAsString(Paper.getAbsolutePath());
-			String jsontxt=new TxtFiles().readFileAsString(j.getAbsolutePath());
-			
+		//	String xmltxt=new TxtFiles().readFileAsString(j.getAbsolutePath());
+			System.out.println(Paper.getName());
 			pb.step();
 			for(String tool : Tools.keySet() ) {
 				
 				
 				if(Papertxt.toLowerCase().contains(tool)) {
+					
 					int occurance = StringUtils.countMatches(Papertxt.toLowerCase(),tool);
 					String Record="";
 					
@@ -276,18 +285,25 @@ public class PMCMultiThreaded implements Runnable {
 					
 					
 					
-					List<String> authors=new PMCMultiThreaded().ListofAffiliation(jsontxt);
-					String journalname= new PMCMultiThreaded().journal(jsontxt);
-							if(authors!=null) {
-								for(int a=0 ;a < authors.size(); ++a) {
+					NodeList authors=new PMCMultiThreaded().ListofAffiliation(j.getAbsolutePath());
+					String journalname= new PMCMultiThreaded().journal(j.getAbsolutePath());
+							
+								
+								for(int a=0 ;a < authors.getLength(); ++a) {
 			
-								String val=NLP.TokenTypeCOUNTRY(authors.get(a).toString());
-								if(val.trim().length()!=0)// found a COUNTRY
+								if(authors.item(a).getTextContent()!=null) {	
+								String val=NLP.TokenTypeCOUNTRY(authors.item(a).getTextContent() , ApplicationIdBack4app ,  APIKeyBack4app);
+								if(val!=null && val.trim().length()!=0)// found a COUNTRY
 								COUNTRIES.add(val) ;
+								
+								else COUNTRIES.add("-"); // when 
+								
+								}
 		}
-							}			
 								
+									
 								
+							
 								LinkedHashMap<String, Integer> COUNTRIESfrequente = new LinkedHashMap<String, Integer>();
 								for(String country : COUNTRIES) {
 									if(COUNTRIESfrequente.containsKey(country))
@@ -296,8 +312,10 @@ public class PMCMultiThreaded implements Runnable {
 										COUNTRIESfrequente.put(country, 1);
 										
 								}
+								
+								
 								Map.Entry<String, Integer> maxEntry = null;
-
+								
 								for (Map.Entry<String, Integer> entry : COUNTRIESfrequente.entrySet())
 								{
 								    if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0)
@@ -306,6 +324,7 @@ public class PMCMultiThreaded implements Runnable {
 								    }
 								}
 								
+							
 								HashMap<String,HashMap<String,String>> pmc=GetByPubmed(j.getName().replaceAll("."+FilenameUtils.getExtension(j.getName()), ""));
 								String PublishedInOnePaper="F";
 								if(pmc.size()>1)
@@ -338,6 +357,7 @@ public class PMCMultiThreaded implements Runnable {
 								
 								AddCSVRecord(Record);
 								}
+								
 								 CSVWithNoneRepeatedPubid+=RecordNonRepeatedAuotherInfo;
 								 
 								 if(RecordNonRepeatedPubid.containsKey(j.getName().replaceAll("."+FilenameUtils.getExtension(j.getName()), ""))) { // if contained then, meaning two pipeline have used in this paper.
@@ -401,7 +421,7 @@ if(pmc==null) {
 			}
 		pmc = pmcForPDBe.entrySet().iterator().next();
 		
-		System.out.println("PDB "+pmc+" thread "+Thread.currentThread().getId());
+		
 		
 		UpdateLog();
 		
@@ -418,9 +438,9 @@ if(pmc==null) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		System.out.println("PDB europepmc "+pmc);
+		
 		if(Txt.trim().length()==0) {
-			System.out.println("Trying elsevier "+pmc);
+			
 			try {
 				Txt=	new elsevier().Get(ElsevierToken, pmc.getValue().get("doi"));
 			} catch (IOException e) {
@@ -429,11 +449,11 @@ if(pmc==null) {
 			}
 
 		}
-		System.out.println("PDB Elsevier "+pmc);
+		
 		if(Txt.trim().length()==0) { // try crossref
-			System.out.println("Trying crossref "+pmc);
+			
 			try {
-				Txt=	new crossref().Get(CrossrefEmail, pmc.getValue().get("doi"), pmc.getValue().get("structureId"));
+				Txt=	new crossref().Get(CrossrefEmail, pmc.getValue().get("doi"), pmc.getKey());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -446,18 +466,18 @@ if(pmc==null) {
 			}
 		}
 		
-		System.out.println("PDB crossref "+pmc);
+		
 		
 		
 		if(Txt.length()!=0) {
-			System.out.println("Found "+pmc);
-			url="https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="+pmc.getValue().get("pubmedId")+"&resultType=core&format=json";
 			
+			//url="https://www.ebi.ac.uk/europepmc/webservices/rest/search?query="+pmc.getValue().get("pubmedId")+"&resultType=core&format=json";
+			url="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id="+pmc.getValue().get("pubmedId")+"&retmode=xml";
 			try {
-				String json = new Downloder().GetHttpRequste(url);
-				if(json.length()!=0) {
+				String affiliation = new Downloder().GetHttpRequste(url);
+				if(affiliation.length()!=0) {
 					
-					new TxtFiles().WriteStringToTxtFile("json/"+pmc.getValue().get("pubmedId")+".json", json);
+					new TxtFiles().WriteStringToTxtFile("affiliations/"+pmc.getValue().get("pubmedId")+".xml", affiliation);
 					new TxtFiles().WriteStringToTxtFile("papers/"+pmc.getValue().get("pubmedId")+".txt", Txt);
 					
 				}
@@ -468,31 +488,52 @@ if(pmc==null) {
 			
 		}
 		
-		System.out.println("PDB json "+pmc);
+		
 		
 	}
 	
-	List<String> ListofAffiliation(String json){
+	NodeList ListofAffiliation(String xml) throws ParserConfigurationException, MalformedURLException, SAXException, IOException, XPathExpressionException{
 		
-		Vector<String> JsonRegx=new Vector<String>();
-		JsonRegx.add("$..authorAffiliationsList.*.*");
-		JsonRegx.add("$..affiliation");
-		for(int i=0 ; i < JsonRegx.size();++i) {
-			List<String> authors = com.jayway.jsonpath.JsonPath.parse(json).read(JsonRegx.get(i));
-			if(authors.size()!=0)
-				return authors;
-		}
-		System.out.println("Error author Affiliations not found "+ Thread.currentThread().getId());
-		return null;
+		
+		
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		Document doc = db.parse(new File(xml));
+		XPath xPath =  XPathFactory.newInstance().newXPath();
+		String expression = "//*[local-name()='Affiliation']";	        
+		NodeList nodeList = (NodeList) xPath.compile(expression).evaluate(doc, XPathConstants.NODESET);
+		
+		
+		
+		return nodeList;
 		
 		
 			
 		
 		
 	}
-String journal(String json){
+	
+String journal(String xml) throws ParserConfigurationException, MalformedURLException, SAXException, IOException, XPathExpressionException{
 		
-		Vector<String> JsonRegx=new Vector<String>();
+		
+	DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+	DocumentBuilder db = dbf.newDocumentBuilder();
+	Document doc = db.parse(new File(xml));
+	XPath xPath =  XPathFactory.newInstance().newXPath();
+	String expression = "//Journal/*[local-name()='Title']";	   
+	NodeList nodeList = (NodeList) xPath.compile(expression).evaluate(
+	   doc, XPathConstants.NODESET);
+	
+	
+	
+	if(nodeList.getLength()>0)
+	
+	return nodeList.item(0).getTextContent().replaceAll(",", " ");
+	else
+		return "";
+	
+	/*
+	Vector<String> JsonRegx=new Vector<String>();
 		JsonRegx.add("$..journal.title");
 		
 		for(int i=0 ; i < JsonRegx.size();++i) {
@@ -500,9 +541,9 @@ String journal(String json){
 			if(journal.size()!=0)
 				return journal.get(0).replaceAll(",", " ");
 		}
-		System.out.println("Error journal name not found "+ Thread.currentThread().getId());
+		//System.out.println("Error journal name not found "+ Thread.currentThread().getId());
 		return null;
-		
+		*/
 		
 			
 		
