@@ -6,15 +6,19 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Vector;
 
-import org.json.simple.parser.ParseException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
 
-import MCMBP.Pipelines.Mining.MiningPipelines;
+import org.json.simple.parser.ParseException;
+import org.xml.sax.SAXException;
+
+
 
 
 
 public class Mining {
 
-	public static void main(String[] args) throws FileNotFoundException, IOException, ParseException, URISyntaxException, InterruptedException {
+	public static void main(String[] args) throws FileNotFoundException, IOException, ParseException, URISyntaxException, InterruptedException, XPathExpressionException, ParserConfigurationException, SAXException {
 		// TODO Auto-generated method stub
 
 		Vector<String> Parm = new Vector<String>();
@@ -63,34 +67,16 @@ public class Mining {
 			
 			
 			
-			new PMCMultiThreaded().Mining(checkArg(Parm,"FilterBy"),checkArg(Parm,"Pipeline"),UseExistsPapers,Multithreaded,checkArg(Parm,"CrossrefEmail"),checkArg(Parm,"ElsevierToken"),checkArg(Parm,"PDBList"),ExtractingInformation);
+			new PMCMultiThreaded().Mining(checkArg(Parm,"FilterBy"),checkArg(Parm,"Pipeline"),UseExistsPapers,Multithreaded,checkArg(Parm,"CrossrefEmail"),checkArg(Parm,"ElsevierToken"),checkArg(Parm,"PDBList"),ExtractingInformation,checkArg(Parm,"ApplicationIdBack4app"),checkArg(Parm,"APIKeyBack4app"));
 		}
 		
 		if(args[0].equals("Cluster")) {
 			
-			new Cluster().CreateJobs(checkArg(Parm,"FilterBy"),checkArg(Parm,"Pipeline"),checkArg(Parm,"CrossrefEmail"),checkArg(Parm,"ElsevierToken"),checkArg(Parm,"PDBList"),checkArg(Parm,"JobParameters"));
+			new Cluster().CreateJobs(checkArg(Parm,"FilterBy"),checkArg(Parm,"Pipeline"),checkArg(Parm,"CrossrefEmail"),checkArg(Parm,"ElsevierToken"),checkArg(Parm,"PDBList"),checkArg(Parm,"JobParameters"),checkArg(Parm,"ApplicationIdBack4app"),checkArg(Parm,"APIKeyBack4app"));
 		}
 		
 		
-	if(args[0].equals("MiningPipeline")) {
-			
-			if(checkArg(Parm,"Pipeline").trim().length()==0)
-			{
-				System.out.println("Please type in the pipelines/tools that you want to mining about. For example. Pipeline=\"arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild\". The name before(:) is the pipeline official name that usauly uses in the reserach paper when they refer to the pipeline and the name after (:) is to use in the CSV file. This help when the pipeline mentions in differnts names in differnts reserach papers.");
-				System.exit(-1);
-			}
-			if(checkArg(Parm,"CrossrefEmail").trim().length()==0)
-			{
-				System.out.println("Please type in your registered email in Crossref. If you did not register, please do it from here https://apps.crossref.org/clickthrough/researchers. Then, you can enter your email using this keyword CrossrefEmail=youremail@email.com");
-				System.exit(-1);
-			}
-			if(checkArg(Parm,"ElsevierToken").trim().length()==0)
-			{
-				System.out.println("Please type in your Elsevier Token. If you did not have Elsevier Token, you can get it from here  https://dev.elsevier.com and selects get api key. Then, you can enter your token using this keyword ElsevierToken=aaaaaa");
-				System.exit(-1);
-			}
-			new MiningPipelines().Mining(checkArg(Parm,"Pipeline"),checkArg(Parm,"PDBList"),checkArg(Parm,"CrossrefEmail"),checkArg(Parm,"ElsevierToken"),checkArg(Parm,"FilterBy"),Multithreaded);
-		}
+	
 	}
 	static String checkArg(Vector<String> Args, String Keyword) {
 		for (int i = 0; i < Args.size(); ++i) {
