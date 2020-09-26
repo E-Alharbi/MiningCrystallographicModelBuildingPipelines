@@ -7,11 +7,20 @@ A tool for mining in research papers that used crystallographic model-building p
 
 For mining in the first author's country as well as the co-authors' countries.
 ```
-java -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild"
+java -Xmx3048m -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" CrossrefEmail=email ElsevierToken=token ApplicationIdBack4app=token APIKeyBack4app=apikey
 ```
 - The above command will fetch all PDB ids as well as Pubmed ID from the PDB bank and then obtains the research paper from https://europepmc.org/ by using the research paper's PubMedID.
 - The papers which do not have PubMedID or are not found in https://europepmc.org/ will be ignored.  
-- Pipeline: The name before the colon (:) is the pipeline official name that is usually used in the research paper when they refer to the pipeline and the name after the colon (:) is to use in the CSV file. This helps when the pipeline names are mentioned in different forms in different research papers.
+- Pipeline: The name before the colon (:) is the pipeline official name that is usually used in the research paper when they refer to the pipeline and the name after the colon (:) is to use in the CSV file. This helps when the pipeline names are mentioned in different forms in different research papers. [Compulsory]
+- CrossrefEmail: your email that registered in Crossref. If you did not register, you could register from here https://apps.crossref.org/clickthrough/researchers. [Optional]
+- ElsevierToken= API key for Elsevier. If you do not have an Elsevier Token, you can get it from here  https://dev.elsevier.com and select get API key. [Optional]
+- ApplicationIdBack4app= App id from back4app.com. [Optional]
+- APIKeyBack4app= App key from back4app.com. [Optional]
+
+Please not that 
+- back4app.com :we use the countries public database in case only the city is mentioned in the author affiliation. You need to register in back4app.com to get the app id and api key.       
+- if you do not use these optional keywords, we only able to get the articles from open access resources. 
+
 ### The output of the above command is three CSV files that contain the following 
 
  
@@ -26,6 +35,8 @@ java -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccan
 | ListOfCountries  | All the countries that mentioned in the authors' affiliation   |
 | FirstAuthor  | The country of the first author     |
 | PublishedInOnePaper  | Set to T when this paper contains multiple PDB     |
+| journal   | name of the journal      |
+| occurance   | how many times the pipeline mentioned in the paper       |
 
 
 The three CSV files: 
@@ -34,6 +45,12 @@ The three CSV files:
 - NonDuplicatedPubid.csv: the paper which has mentioned multiple pipelines are omitted. 
 
 
+- The resources that the tool use to get the research papers:
+- https://europepmc.org/
+- https://www.elsevier.com/
+- https://onlinelibrary.wiley.com 
+
+Some of the above resources need membership. Elsevier will recognise if you have a membership from your IP address when you connect from your organisation/university. However, you need to register in Crossref and Onlinelibrary. 
 
 
 ### UseExistsPapers keyword 
@@ -44,17 +61,10 @@ UseExistsPapers=T
 ```
       
 
-## Mining pipelines
-You can be mining only about the pipelines used in the research papers without mining in the authors' affiliation. The difference here from the "Mining authors information"  is that here we use more resources to obtain the research papers. 
-- The resources that use to get the research papers:
-- https://europepmc.org/
-- https://www.elsevier.com/
-- https://onlinelibrary.wiley.com 
-
-Some of the above resources need membership. Elsevier will recognise if you have a membership from your IP address when you connect from your organisation/university. However, you need to register in Crossref and Onlinelibrary. 
+## PDBList keyword
 
 ```
-java -jar Mining.jar MiningPipeline Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" PDBList=PDB.txt CrossrefEmail=youremail@email.com ElsevierToken=aaaa
+java -jar Mining.jar MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" PDBList=PDB.txt CrossrefEmail=youremail@email.com ElsevierToken=aaaa
 ```
 
 - PDBList:  a text file containing the PDB ids that you want to mine about. A PDB id in each line. For example: 
@@ -62,22 +72,7 @@ java -jar Mining.jar MiningPipeline Pipeline="arp/warp:ARP/wARP,buccaneer:Buccan
 4ZYC
 4ZYF
 ```
-If you did not provide this keyword, it would be mining in all the PDB that obtain from the PDB bank.
-- CrossrefEmail: your email that registered in Crossref. If you did not register, you could register from here https://apps.crossref.org/clickthrough/researchers.
-- ElsevierToken= API key for Elsevier. If you do not have an Elsevier Token, you can get it from here  https://dev.elsevier.com and select get API key. 
 
-### The outputs are  three CSV files contain the following
-- FoundPapers.csv: The papers that are found and they were mentioned the pipeline/tool
-- PapersFoundButNotUsePipeline.csv: The papers that are found but they were not mentioned the pipeline/tool
-- PapersNOTFound.csv: The papers that are not found.
-
-The CSV file contains the following:
-
-| Field  | Description |
-| ------------- | ------------- |
-| PDB  | PDB id  |
-| Pipeline  | the tool/pipeline that was used. Only in FoundPapers.csv   |
-| PaperLink  | DOI link    |
 
 ## Filtering the PDB bank data 
 You can filter that PDB that obtains from the PDB bank based on these fields:
@@ -89,13 +84,13 @@ You can filter that PDB that obtains from the PDB bank based on these fields:
 | pubmedId  |Pubmed id    |
 |structureTitle| research paper title |
 |experimentalTechnique| such as X-RAY DIFFRACTION |
-| PublicationYear  | Publication year of the research paper    |
+| publicationYear  | Publication year of the research paper    |
 | resolution  | PDB resolution    |
 
 - You need to pass the keyword FilterBy with the command 
 
 ```
-java -jar Mining.jar MiningAuthors FilterBy="[experimentalTechnique:X-RAY DIFFRACTION,SOLUTION NMR][publicationYear:2015-2020] Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" 
+java -Xmx3048m -jar Mining.jar MiningAuthors FilterBy="[experimentalTechnique:X-RAY DIFFRACTION,SOLUTION NMR][publicationYear:2015-2020] Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" 
 ```
 - The above command will be mining in the PDB that is solved by only X-RAY DIFFRACTION or SOLUTION NMR and published between 2015-2020.
 - You can select to search for the papers that published in specific years by using a comma instead of hyphen For example:
@@ -143,8 +138,21 @@ All the fields mentioned in the above table can be used in the same way as in th
 33. SOLUTION NMR, ELECTRON MICROSCOPY
 34. NEUTRON DIFFRACTION, SOLUTION NMR
 
+## Run on cluster server
+
+You can run the tool on a cluster to speed up the download of the papers. 
+
+```
+java -Xmx3048m  -jar Mining.jar Cluster FilterBy="[experimentalTechnique:X-RAY DIFFRACTION][publicationYear:2010-2020]" Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:PHENIX AutoBuild,phenix autobuild:PHENIX AutoBuild" CrossrefEmail=email ElsevierToken=token JobParameters="[--time#00:10:00][--mem#4000][--partition#preempt][module load chem/ccp4/7.0.066][module load lang/Java/1.8.0_212]"
+```
+Write the above command in a shell script and submit as job the cluster. Please note that the tool can only run on clusters that use slurm. Change the job parameters as necessary and spilt the keyword slurm and its vale by #. You do not need to write #SBATCH before each slurm keyword. 
+
+```
+java -Xmx3048m  -jar Mining.jar MiningAuthors  Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:PHENIX AutoBuild,phenix autobuild:PHENIX AutoBuild" CrossrefEmail=email ElsevierToken=token UseExistsPapers=T
+```
+Once all the jobs are completed, run the above command to extract authors affiliation and create the CSV files  
 ## Multithreaded
-- The tool supports Multithreaded by setting Multithreaded=T 
+- The tool supports multithreaded by setting Multithreaded=T 
 - A large number of threads might cause the resources to block the Http connections and result in freezing the tool. 
 
 
