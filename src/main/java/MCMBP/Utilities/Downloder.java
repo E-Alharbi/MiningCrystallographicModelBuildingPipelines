@@ -67,76 +67,12 @@ public class Downloder {
 		bos.close();
 		
 		
-		/*
-		//System.setProperty("Referer","https://www.google.com");
-		URL hh= new URL(Link);
-		URLConnection connection = hh.openConnection();
-		String redirect = connection.getHeaderField("Location");
 		
-		if (redirect == null) { // if redirect is null, meaning that the website did not redirect to another link  
-			redirect=Link;
-		}
-	
-		URL url = new URL(redirect);
-		
-		InputStream in = url.openStream();
-		FileOutputStream fos = new FileOutputStream(new File(Thread.currentThread().getId()+"."+FileType));
-
-		
-		int length = -1;
-		byte[] buffer = new byte[1024];// buffer for portion of data from connection
-		while ((length = in.read(buffer)) > -1) {
-		    fos.write(buffer, 0, length);
-		}
-		fos.close();
-		in.close();
-		System.out.println("File downloaded");
-		*/
-		
-		/*
-		System.out.println("Download "+Link);
-	String wget="";
-	if(new File("/usr/bin/wget").exists())
-		wget="/usr/bin/wget";
-	if(new File("/usr/local/bin/wget").exists())
-		wget="/usr/local/bin/wget";
-	if(wget.isEmpty())
-		System.out.println( "wget command can not be found. Please check if wget is already installed.");
-	
-		
-	
-	Runtime rt = Runtime.getRuntime();
-	System.out.println("Runtime rt = Runtime.getRuntime(); "+Link);
-	Process pr = rt.exec(wget+" "+Link+" -T 500 -t 3 -O "+Thread.currentThread().getId()+"."+FileType);
-	System.out.println("Process pr "+Link);
-	BufferedReader stdInput = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-	System.out.println("BufferedReader stdInput "+Link);
-	BufferedReader stdError = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
-	System.out.println("BufferedReader stdError "+Link);
-	
-String st="";
-			while ((st = stdInput.readLine()) != null) {
-				System.out.println("here "+Link);
-				System.out.println(st);
-			}
-			System.out.println("loop "+Link);
-			while ((st = stdError.readLine()) != null) {
-
-				System.out.println("error "+st);
-				
-
-			}
-			System.out.println("loop2 "+Link);
-			
-			System.out.println("Downloaded "+Link);
-			stdError.close();
-			stdInput.close();
-			*/
 			return FileName+"."+FileType;
 }
 	
 	public String GetHttpRequste(String urllink) throws IOException {
-		System.out.println("GetHttpRequste "+urllink);	
+			
 	URL url=null;
 	try {
 		url = new URL(urllink);
@@ -188,7 +124,7 @@ String st="";
 	
 	try {
 		while ((output = br.readLine()) != null) {
-			//System.out.println(output);
+			
 			Txt+=output+"\n";
 		}
 	} catch (IOException e) {
@@ -198,7 +134,7 @@ String st="";
 	}
 	conn.disconnect();
 	  	
-	System.out.println("GetHttpRequste done "+urllink);	
+	
 	return Txt;
 }
 }
