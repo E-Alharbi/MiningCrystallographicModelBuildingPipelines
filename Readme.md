@@ -17,9 +17,9 @@ java -Xmx3048m -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccan
 - ApplicationIdBack4app= App id from back4app.com. [Optional]
 - APIKeyBack4app= App key from back4app.com. [Optional]
 
-Please not that 
+Please note that 
 - back4app.com :we use the countries public database in case only the city is mentioned in the author affiliation. You need to register in back4app.com to get the app id and api key.       
-- if you do not use these optional keywords, we only able to get the articles from open access resources. 
+- if you do not use the optional keywords, we only able to get the articles from open access resources. 
 
 ### The output of the above command is three CSV files that contain the following 
 
@@ -45,7 +45,7 @@ The three CSV files:
 - NonDuplicatedPubid.csv: the paper which has mentioned multiple pipelines are omitted. 
 
 
-- The resources that the tool use to get the research papers:
+### The resources that the tool use to get the research papers:
 - https://europepmc.org/
 - https://www.elsevier.com/
 - https://onlinelibrary.wiley.com 
