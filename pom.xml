@@ -46,13 +46,23 @@
   </build>
 
 
-
+<repositories>
+  <!-- ... other repository elements ... -->
+  <repository>
+    <snapshots>
+      <enabled>false</enabled>
+    </snapshots>
+    <id>central</id>
+    <name>bintray</name>
+    <url>https://jcenter.bintray.com</url>
+  </repository>
+</repositories>
 
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.13.1</version>
       
     </dependency>
     
@@ -77,12 +87,12 @@
   <dependency> 
            <groupId>edu.stanford.nlp</groupId>
            <artifactId>stanford-corenlp</artifactId>
-           <version>3.9.2</version>
+           <version>4.0.0</version>
   </dependency> 
   <dependency> 
            <groupId>edu.stanford.nlp</groupId>
            <artifactId>stanford-corenlp</artifactId>
-           <version>3.9.2</version>
+           <version>4.0.0</version>
            <classifier>models</classifier> 
   </dependency>
 <!-- https://mvnrepository.com/artifact/org.json/json -->
@@ -149,6 +159,30 @@
     <artifactId>httpclient</artifactId>
     <version>4.5.12</version>
 </dependency>
+
+
+
+
+<!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->
+<dependency>
+    <groupId>org.jsoup</groupId>
+    <artifactId>jsoup</artifactId>
+    <version>1.13.1</version>
+</dependency>
+
+
+<!-- Thanks for using https://jar-download.com -->
+
+<!-- https://mvnrepository.com/artifact/edu.stanford.nlp/stanford-parse-models -->
+
+
+
+
+
+
+
+
+
 
 
 
