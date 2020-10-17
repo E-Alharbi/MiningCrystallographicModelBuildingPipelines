@@ -22,12 +22,13 @@ public class TxtFiles {
 		}
 	}
 
-	public void WriteVectorToTxtFile(String File , Vector<String> Vec  ) throws FileNotFoundException {
-		String Txt="";
-		for(int v=0 ; v < Vec.size() ; ++v)
-			Txt+=Vec.get(v)+"\n";
-		WriteStringToTxtFile(File,Txt);
+	public void WriteVectorToTxtFile(String File, Vector<String> Vec) throws FileNotFoundException {
+		String Txt = "";
+		for (int v = 0; v < Vec.size(); ++v)
+			Txt += Vec.get(v) + "\n";
+		WriteStringToTxtFile(File, Txt);
 	}
+
 	public String readFileAsString(String filePath) throws IOException {
 		StringBuffer fileData = new StringBuffer();
 		BufferedReader reader = new BufferedReader(new FileReader(filePath));
@@ -38,21 +39,23 @@ public class TxtFiles {
 			fileData.append(readData);
 		}
 		reader.close();
-		
-		if(new File(String.valueOf(Thread.currentThread().getId()+"."+FilenameUtils.getExtension(filePath))).exists()) {
-			FileUtils.deleteQuietly(new File(String.valueOf(Thread.currentThread().getId()+"."+FilenameUtils.getExtension(filePath))));	
-			
+
+		if (new File(String.valueOf(Thread.currentThread().getId() + "." + FilenameUtils.getExtension(filePath)))
+				.exists()) {
+			FileUtils.deleteQuietly(new File(
+					String.valueOf(Thread.currentThread().getId() + "." + FilenameUtils.getExtension(filePath))));
+
 		}
 		return fileData.toString();
 	}
-	
-	public Vector<String> ReadIntoVec(String filePath, boolean UpperCase ) throws IOException{
-		Vector<String> Vec= new Vector<String>();
-		String Txt=readFileAsString(filePath);
-		String [] lines = Txt.split("\n");
+
+	public Vector<String> ReadIntoVec(String filePath, boolean UpperCase) throws IOException {
+		Vector<String> Vec = new Vector<String>();
+		String Txt = readFileAsString(filePath);
+		String[] lines = Txt.split("\n");
 		for (String line : lines) {
-			if(UpperCase==true)
-			Vec.add(line.toUpperCase());
+			if (UpperCase == true)
+				Vec.add(line.toUpperCase());
 			else
 				Vec.add(line);
 		}
