@@ -7,7 +7,7 @@ A tool for mining in research papers that used crystallographic model-building p
 
 For mining in the first author's country as well as the co-authors' countries.
 ```
-java -Xmx3048m -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" CrossrefEmail=email ElsevierToken=token ApplicationIdBack4app=token APIKeyBack4app=apikey
+java -Xmx3048m -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:Phenix Autobuild,phenix autobuild:Phenix Autobuild" CrossrefEmail=email ElsevierToken=token ApplicationIdBack4app=token APIKeyBack4app=apikey BingApiKey=apikey
 ```
 - The above command will fetch all PDB ids as well as Pubmed ID from the PDB bank and then obtains the research paper from https://europepmc.org/ by using the research paper's PubMedID.
 - The papers which do not have PubMedID or are not found in https://europepmc.org/ will be ignored.  
@@ -16,10 +16,11 @@ java -Xmx3048m -jar Mining.jar  MiningAuthors Pipeline="arp/warp:ARP/wARP,buccan
 - ElsevierToken= API key for Elsevier. If you do not have an Elsevier Token, you can get it from here  https://dev.elsevier.com and select get API key. [Optional]
 - ApplicationIdBack4app= App id from back4app.com. [Optional]
 - APIKeyBack4app= App key from back4app.com. [Optional]
-
+- BingApiKey= microsoft bing maps api key. You get an api key from here https://www.bingmapsportal.com. [Optional]  
 Please note that 
 - back4app.com :we use the countries public database in case only the city is mentioned in the author affiliation. You need to register in back4app.com to get the app id and api key.       
-- if you do not use the optional keywords, we only able to get the articles from open access resources. 
+- we use microsoft bing maps when the city name in two different countries. 
+- if you do not use the optional keywords, this will reduce the results being collected. 
 
 ### The output of the above command is three CSV files that contain the following 
 
@@ -37,15 +38,25 @@ Please note that
 | PublishedInOnePaper  | Set to T when this paper contains multiple PDB     |
 | journal   | name of the journal      |
 | occurance   | how many times the pipeline mentioned in the paper       |
+|NameAsInPaper | the tool name as mentioned in the paper |
+|journalAbbreviation | the abbreviation of the journal name |
+| PartOfSentence | the part of a sentence where the tool name in mentioned| 
+| Confidence* | high= no negative words were used in the sentence |
 
+* negative words = modification,density,refinement and refine.
 
 The three CSV files: 
 - AuthorsInformation.csv: each record corresponded to a PDB. So, the authors' information will be repeated in case of multiple PDB published by the same author. 
 - NonDuplicatedPipelineAuthorsInformation.csv: all PDB published in the same paper combine in one record. 
 - NonDuplicatedPubid.csv: the paper which has mentioned multiple pipelines are omitted. 
 
-
-### The resources that the tool use to get the research papers:
+In addition to the above CSV files, the following files are also produced:
+- journals.csv: contains the journals names and the number of papers in each journal.
+- journalsbyPipelines.csv: same as "journals.csv", but with adding the number of tool mentions  in each journal.   
+- PublicationYear.csv: contains the number of papers in each publication year. 
+- PublicationYearByPipeline.csv: same as "PublicationYear.csv", but with adding the number of tool mentions  in publication year.  
+ 
+### The resources from where we get the research papers:
 - https://europepmc.org/
 - https://www.elsevier.com/
 - https://onlinelibrary.wiley.com 
@@ -53,11 +64,11 @@ The three CSV files:
 Some of the above resources need membership. Elsevier will recognise if you have a membership from your IP address when you connect from your organisation/university. However, you need to register in Crossref and Onlinelibrary. 
 
 
-### UseExistsPapers keyword 
-The tool will download the research papers as well as the authors' affiliation and then extract the required information from the authors' affiliation. Use UseExistsPapers when the tool already downloaded the research papers, and you want only to create the CSV file. 
+### UseDownloadedPapers keyword 
+The tool will download the research papers as well as the authors' affiliation and then extract the required information from the authors' affiliation. Use UseDownloadedPapers when the tool already downloaded the research papers, and you want only to create the CSV file. 
 
 ```
-UseExistsPapers=T
+UseDownloadedPapers=T
 ```
       
 
@@ -143,16 +154,27 @@ All the fields mentioned in the above table can be used in the same way as in th
 You can run the tool on a cluster to speed up the download of the papers. 
 
 ```
-java -Xmx3048m  -jar Mining.jar Cluster FilterBy="[experimentalTechnique:X-RAY DIFFRACTION][publicationYear:2010-2020]" Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:PHENIX AutoBuild,phenix autobuild:PHENIX AutoBuild" CrossrefEmail=email ElsevierToken=token JobParameters="[--time#00:10:00][--mem#4000][--partition#preempt][module load chem/ccp4/7.0.066][module load lang/Java/1.8.0_212]"
+java -Xmx3048m  -jar Mining.jar Cluster FilterBy="[experimentalTechnique:X-RAY DIFFRACTION][publicationYear:2010-2020]" Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:PHENIX AutoBuild,phenix autobuild:PHENIX AutoBuild" CrossrefEmail=email ElsevierToken=token BingApiKey=apikey JobParameters="[--time#00:10:00][--mem#4000][--partition#preempt][module load chem/ccp4/7.0.066][module load lang/Java/1.8.0_212]"
 ```
-Write the above command in a shell script and submit as job the cluster. Please note that the tool can only run on clusters that use slurm. Change the job parameters as necessary and spilt the keyword slurm and its vale by #. You do not need to write #SBATCH before each slurm keyword. 
-
+Write the above command in a shell script and submit as a job the cluster. Please note that the tool can only run on clusters that use slurm. Change the job parameters as necessary and spilt the keyword slurm and its vale by #. You do not need to write #SBATCH before each slurm keyword. It is recommended to run the above command few times (one by one after all jobs are completed) as some of the publishers API may not response if too many jobs are trying to connect at the same time so some of the jobs will fail. These failed jobs may get success when re-running them. 
 ```
-java -Xmx3048m  -jar Mining.jar MiningAuthors  Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:PHENIX AutoBuild,phenix autobuild:PHENIX AutoBuild" CrossrefEmail=email ElsevierToken=token UseExistsPapers=T
+java -Xmx3048m  -jar Mining.jar MiningAuthors  Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:PHENIX AutoBuild,phenix autobuild:PHENIX AutoBuild" CrossrefEmail=email ElsevierToken=token BingApiKey=apikey UseDownloadedPapers=T
 ```
 Once all the jobs are completed, run the above command to extract authors affiliation and create the CSV files  
 ## Multithreaded
 - The tool supports multithreaded by setting Multithreaded=T 
 - A large number of threads might cause the resources to block the Http connections and result in freezing the tool. 
 
+## Sentences analysing 
+We obtained the negative words by finding the words occurrence and then we wrote the regular expression depending on the words with high occurrence. You can perform your own sentences analysing using the following command     
 
+```
+java -Xmx3048m  -jar Mining.jar SentencesAnalysing  Pipeline="arp/warp:ARP/wARP,buccaneer:Buccaneer,shelxe:Shelxe,phenix.autobuild:PHENIX AutoBuild,phenix autobuild:PHENIX AutoBuild" PapersFolder=the path to the folder contains the papers
+```
+
+The output of the above command are 
+
+- Sentences.txt: contains the sentences where mentioned the tools names from different papers.  
+- Words.csv: contains the words and its occurrence
+ 
+Please note that you need run first MiningAuthors command and this will download the papers and then you can do sentences analysing.  
