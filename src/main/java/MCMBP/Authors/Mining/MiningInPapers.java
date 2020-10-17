@@ -235,7 +235,7 @@ public class MiningInPapers implements Runnable {
 			NLP.LoadNLP();
 			pb = new ProgressBar("Extracting information ", papers.length);
 
-			String CSVHeaders = "ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper,journal,occurance,NameAsInPaper,journalAbbreviation,PartOfSentence,Confidence\n";
+			String CSVHeaders = "ID,Resolution,PublicationYear,Tool,PDB,MostCountry,ListOfCountries,FirstAuthor,PublishedInOnePaper,journal,occurrence,NameAsInPaper,journalAbbreviation,PartOfSentence,Confidence\n";
 			String CSVWithNoneRepeatedPubid = CSVHeaders;
 			String RecordNonRepeatedAuotherInfo = "";
 			HashMap<String, String> RecordNonRepeatedPubid = new HashMap<String, String>();
@@ -258,7 +258,7 @@ public class MiningInPapers implements Runnable {
 							Pair<String, String> IsToolMentioned = NLP.SplitSentence(Paper.getAbsolutePath(), tool);
 							if (IsToolMentioned != null && IsToolMentioned.First.trim().length() != 0) {
 
-								int occurance = StringUtils.countMatches(Jsoup.parse(Papertxt).text(), tool);
+								int occurrence = StringUtils.countMatches(Jsoup.parse(Papertxt).text(), tool);
 								String Record = "";
 
 								Vector<String> COUNTRIES = new Vector<String>();
@@ -320,12 +320,12 @@ public class MiningInPapers implements Runnable {
 
 										Record += toolofficialname + "," + PDBID + "," + maxEntry.getKey() + ","
 												+ ListOfCOUNTRIES + "," + FirstAuthorCountry + "," + PublishedInOnePaper
-												+ "," + journalname + "," + occurance + "," + tool + ","
+												+ "," + journalname + "," + occurrence + "," + tool + ","
 												+ journalAbbreviation + "," + IsToolMentioned.First + ","
 												+ IsToolMentioned.Second + "\n";
 										RecordNonRepeatedAuotherInfo += toolofficialname + "," + PDBs + ","
 												+ maxEntry.getKey() + "," + ListOfCOUNTRIES + "," + COUNTRIES.get(0)
-												+ "," + PublishedInOnePaper + "," + journalname + "," + occurance + ","
+												+ "," + PublishedInOnePaper + "," + journalname + "," + occurrence + ","
 												+ tool + "," + journalAbbreviation + "," + IsToolMentioned.First + ","
 												+ IsToolMentioned.Second + "\n";
 									}
@@ -335,7 +335,7 @@ public class MiningInPapers implements Runnable {
 												+ "," + PublishedInOnePaper + "," + journalname + "\n";
 										RecordNonRepeatedAuotherInfo += toolofficialname + "," + PDBID + ","
 												+ "-1,-1,-1," + PublishedInOnePaper + "," + journalname + ","
-												+ occurance + "," + tool + "," + journalAbbreviation + ","
+												+ occurrence + "," + tool + "," + journalAbbreviation + ","
 												+ IsToolMentioned.First + "," + IsToolMentioned.Second + "\n";
 									}
 
