@@ -180,3 +180,9 @@ The outputs of the above command are
 - Words.csv: contains the words and their occurrence
  
 Please note that you need to run first MiningAuthors command and this will download the papers, and then you can do sentences analysing.
+
+## Citing
+
+```
+Alharbi, E., Bond, P., Calinescu, R., & Cowtan, K. (2021). Predicting the performance of Automated Crystallographic Model-building pipelines. Acta Crystallographica Section D Structural Biology, 77(12). https://doi.org/10.1107/s2059798321010500
+```
